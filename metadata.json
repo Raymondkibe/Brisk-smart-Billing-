@@ -1,0 +1,6 @@
+{
+  "name": "BRISK BILLING — Smart Billing, Payments & Inventory",
+  "description": "BRISK BILLING helps businesses manage sales, products, inventory, M-Pesa payments, digital receipts, workers and reports from one powerful platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

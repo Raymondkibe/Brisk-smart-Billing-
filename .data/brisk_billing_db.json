@@ -1,0 +1,499 @@
+{
+  "profiles": [
+    {
+      "id": "user_admin_001",
+      "email": "admin@briskbilling.co.ke",
+      "phone": "254700000000",
+      "full_name": "Platform Super Admin",
+      "password": "Admin123!",
+      "password_hash": "2bb80e6074900a68d0f191a26d173e13d9418ac6677f98889ff01cf52c4293f9",
+      "is_super_admin": true,
+      "created_at": "2026-09-30T00:00:00.000Z",
+      "updated_at": "2026-09-30T00:00:00.000Z"
+    },
+    {
+      "id": "user_owner_001",
+      "email": "owner@abcshop.co.ke",
+      "phone": "0700112233",
+      "full_name": "David Mwangi",
+      "password": "Owner123!",
+      "password_hash": "43d56f98861e86a8d60c723ad03ac2ff93bbfc3e8a066b9c0423b12960ba6184",
+      "email_verified": true,
+      "created_at": "2026-10-02T12:09:09.564Z",
+      "updated_at": "2026-10-02T12:09:09.564Z"
+    },
+    {
+      "id": "user_worker_001",
+      "email": "john.kamau@abcshop.co.ke",
+      "phone": "0712345678",
+      "full_name": "John Kamau",
+      "password": "123456",
+      "password_hash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      "email_verified": true,
+      "created_at": "2026-10-02T12:09:09.564Z",
+      "updated_at": "2026-10-02T12:09:09.564Z"
+    },
+    {
+      "id": "user_manager_001",
+      "email": "mary.wanjiku@abcshop.co.ke",
+      "phone": "0722334455",
+      "full_name": "Mary Wanjiku",
+      "password": "123456",
+      "password_hash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      "email_verified": true,
+      "created_at": "2026-10-02T12:09:09.564Z",
+      "updated_at": "2026-10-02T12:09:09.564Z"
+    },
+    {
+      "id": "user_sales_001",
+      "email": "peter.otieno@abcshop.co.ke",
+      "phone": "0733445566",
+      "full_name": "Peter Otieno",
+      "password": "123456",
+      "password_hash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      "email_verified": true,
+      "created_at": "2026-10-02T12:09:09.564Z",
+      "updated_at": "2026-10-02T12:09:09.564Z"
+    }
+  ],
+  "businesses": [
+    {
+      "id": "biz_abc_shop_001",
+      "owner_id": "user_owner_001",
+      "name": "ABC SHOP",
+      "slug": "abc-shop",
+      "category": "Retail & Supermarket",
+      "phone": "0700112233",
+      "email": "contact@abcshop.co.ke",
+      "location": "Nairobi CBD, Kenya",
+      "address": "Kimathi Street, Nairobi",
+      "currency": "KES",
+      "status": "active",
+      "receipt_footer": "Thank you for shopping with ABC SHOP! Powered by BRISK SMART BILLING.",
+      "tax_percentage": 16,
+      "vat_enabled": true,
+      "prices_include_vat": true,
+      "created_at": "2026-10-02T12:09:09.564Z",
+      "updated_at": "2026-10-02T12:09:09.564Z"
+    }
+  ],
+  "business_members": [
+    {
+      "id": "mem_owner_001",
+      "business_id": "biz_abc_shop_001",
+      "user_id": "user_owner_001",
+      "role": "owner",
+      "status": "active",
+      "employee_id": "OWN-001",
+      "permissions": {
+        "can_create_sales": true,
+        "can_apply_discount": true,
+        "max_discount_percent": 100,
+        "can_manage_products": true,
+        "can_manage_inventory": true,
+        "can_manage_workers": true,
+        "can_view_reports": true,
+        "can_configure_mpesa": true,
+        "can_manage_subscription": true,
+        "can_issue_refunds": true
+      },
+      "created_at": "2026-10-02T12:09:09.564Z",
+      "updated_at": "2026-10-02T12:09:09.564Z"
+    },
+    {
+      "id": "mem_cashier_001",
+      "business_id": "biz_abc_shop_001",
+      "user_id": "user_worker_001",
+      "role": "cashier",
+      "status": "active",
+      "employee_id": "EMP-001",
+      "notes": "Lead morning shift cashier",
+      "permissions": {
+        "can_create_sales": true,
+        "can_apply_discount": true,
+        "max_discount_percent": 5,
+        "can_manage_products": false,
+        "can_manage_inventory": false,
+        "can_manage_workers": false,
+        "can_view_reports": false,
+        "can_configure_mpesa": false,
+        "can_manage_subscription": false,
+        "can_issue_refunds": false
+      },
+      "created_at": "2026-10-02T12:09:09.564Z",
+      "updated_at": "2026-10-02T12:09:09.564Z"
+    },
+    {
+      "id": "mem_manager_001",
+      "business_id": "biz_abc_shop_001",
+      "user_id": "user_manager_001",
+      "role": "manager",
+      "status": "active",
+      "employee_id": "EMP-002",
+      "notes": "Store operations & stock supervisor",
+      "permissions": {
+        "can_create_sales": true,
+        "can_apply_discount": true,
+        "max_discount_percent": 20,
+        "can_manage_products": true,
+        "can_manage_inventory": true,
+        "can_manage_workers": true,
+        "can_view_reports": true,
+        "can_configure_mpesa": false,
+        "can_manage_subscription": false,
+        "can_issue_refunds": true
+      },
+      "created_at": "2026-10-02T12:09:09.564Z",
+      "updated_at": "2026-10-02T12:09:09.564Z"
+    },
+    {
+      "id": "mem_sales_001",
+      "business_id": "biz_abc_shop_001",
+      "user_id": "user_sales_001",
+      "role": "sales_worker",
+      "status": "inactive",
+      "employee_id": "EMP-003",
+      "notes": "Field & counter sales representative",
+      "permissions": {
+        "can_create_sales": true,
+        "can_apply_discount": false,
+        "max_discount_percent": 0,
+        "can_manage_products": false,
+        "can_manage_inventory": false,
+        "can_manage_workers": false,
+        "can_view_reports": false,
+        "can_configure_mpesa": false,
+        "can_manage_subscription": false,
+        "can_issue_refunds": false
+      },
+      "created_at": "2026-10-02T12:09:09.564Z",
+      "updated_at": "2026-10-02T12:09:09.564Z"
+    }
+  ],
+  "subscription_plans": [
+    {
+      "id": "plan_starter",
+      "name": "Starter",
+      "price": 450,
+      "duration_days": 30,
+      "worker_limit": 1,
+      "product_limit": 100,
+      "transaction_limit": 500,
+      "features": [
+        "M-Pesa STK Push",
+        "Digital Receipts",
+        "Basic Inventory",
+        "1 Worker"
+      ],
+      "active": true,
+      "created_at": "2026-09-30T00:00:00.000Z"
+    },
+    {
+      "id": "plan_basic",
+      "name": "Basic",
+      "price": 750,
+      "duration_days": 30,
+      "worker_limit": 3,
+      "product_limit": 500,
+      "transaction_limit": 2000,
+      "features": [
+        "M-Pesa & QR Payments",
+        "Digital & PDF Receipts",
+        "Inventory & Low Stock Alerts",
+        "Up to 3 Workers",
+        "Customer Profiles"
+      ],
+      "active": true,
+      "created_at": "2026-09-30T00:00:00.000Z"
+    },
+    {
+      "id": "plan_standard",
+      "name": "Standard",
+      "price": 1500,
+      "duration_days": 30,
+      "worker_limit": 10,
+      "product_limit": 2500,
+      "transaction_limit": 10000,
+      "features": [
+        "Everything in Basic",
+        "Up to 10 Workers",
+        "Advanced Reports & CSV Export",
+        "Role Permissions & Audit Logs",
+        "Expense Tracking"
+      ],
+      "active": true,
+      "created_at": "2026-09-30T00:00:00.000Z"
+    },
+    {
+      "id": "plan_business",
+      "name": "Business",
+      "price": 2500,
+      "duration_days": 30,
+      "worker_limit": 25,
+      "product_limit": 10000,
+      "transaction_limit": 50000,
+      "features": [
+        "Everything in Standard",
+        "Up to 25 Workers",
+        "High-volume Speed POS",
+        "Priority Support",
+        "Custom Branding on Receipts"
+      ],
+      "active": true,
+      "created_at": "2026-09-30T00:00:00.000Z"
+    },
+    {
+      "id": "plan_premium",
+      "name": "Premium",
+      "price": 3500,
+      "duration_days": 30,
+      "worker_limit": 999,
+      "product_limit": 99999,
+      "transaction_limit": 999999,
+      "features": [
+        "Unlimited Workers",
+        "Unlimited Products",
+        "Multi-Branch Readiness",
+        "Dedicated Account Manager",
+        "Custom API Integrations"
+      ],
+      "active": true,
+      "created_at": "2026-09-30T00:00:00.000Z"
+    }
+  ],
+  "subscriptions": [
+    {
+      "id": "sub_abc_shop_001",
+      "business_id": "biz_abc_shop_001",
+      "plan_id": "plan_standard",
+      "plan_name": "Standard (Active Plan - 10 Workers Allowed)",
+      "status": "active",
+      "trial_started_at": "2026-10-02T12:09:09.564Z",
+      "trial_ends_at": "2026-10-16T12:09:09.564Z",
+      "started_at": "2026-10-02T12:09:09.564Z",
+      "ends_at": "2026-10-16T12:09:09.564Z",
+      "days_remaining": 14,
+      "created_at": "2026-10-02T12:09:09.564Z",
+      "updated_at": "2026-10-02T12:09:09.564Z"
+    }
+  ],
+  "categories": [
+    {
+      "id": "cat_dairy_001",
+      "business_id": "biz_abc_shop_001",
+      "name": "Dairy & Beverages",
+      "created_at": "2026-10-02T12:09:09.564Z"
+    },
+    {
+      "id": "cat_bakery_001",
+      "business_id": "biz_abc_shop_001",
+      "name": "Bakery & Bread",
+      "created_at": "2026-10-02T12:09:09.564Z"
+    }
+  ],
+  "products": [
+    {
+      "id": "prod_milk_500ml",
+      "business_id": "biz_abc_shop_001",
+      "category_id": "cat_dairy_001",
+      "category_name": "Dairy & Beverages",
+      "brand_id": "brd_brookside_001",
+      "brand_name": "Brookside",
+      "variant": "Fresh Milk",
+      "size": "500",
+      "unit": "ml",
+      "unit_size": "500 ml",
+      "name": "Brookside Fresh Milk 500ml",
+      "sku": "BRK-MLK-500",
+      "barcode": "616110000101",
+      "description": "Pasteurized whole fresh milk pouch 500ml",
+      "selling_price": 70,
+      "buying_price": 55,
+      "vat_type": "default",
+      "tax_rate": 16,
+      "stock_quantity": 150,
+      "low_stock_threshold": 15,
+      "fractional_quantity_allowed": false,
+      "active": true,
+      "created_at": "2026-10-02T12:09:09.564Z",
+      "updated_at": "2026-10-02T12:09:09.564Z"
+    },
+    {
+      "id": "prod_milk_1l",
+      "business_id": "biz_abc_shop_001",
+      "category_id": "cat_dairy_001",
+      "category_name": "Dairy & Beverages",
+      "brand_id": "brd_brookside_001",
+      "brand_name": "Brookside",
+      "variant": "Fresh Milk",
+      "size": "1",
+      "unit": "L",
+      "unit_size": "1 L",
+      "name": "Brookside Fresh Milk 1L",
+      "sku": "BRK-MLK-1000",
+      "barcode": "616110000102",
+      "description": "Pasteurized whole fresh milk tetra carton 1L",
+      "selling_price": 140,
+      "buying_price": 110,
+      "vat_type": "default",
+      "tax_rate": 16,
+      "stock_quantity": 100,
+      "low_stock_threshold": 10,
+      "fractional_quantity_allowed": false,
+      "active": true,
+      "created_at": "2026-10-02T12:09:09.564Z",
+      "updated_at": "2026-10-02T12:09:09.564Z"
+    },
+    {
+      "id": "prod_kcc_500ml",
+      "business_id": "biz_abc_shop_001",
+      "category_id": "cat_dairy_001",
+      "category_name": "Dairy & Beverages",
+      "brand_id": "brd_kcc_001",
+      "brand_name": "KCC",
+      "variant": "Fresh Milk",
+      "size": "500",
+      "unit": "ml",
+      "unit_size": "500 ml",
+      "name": "KCC Fresh Milk 500ml",
+      "sku": "KCC-MLK-500",
+      "barcode": "616110000103",
+      "description": "KCC Gold Crown Fresh Milk 500ml",
+      "selling_price": 65,
+      "buying_price": 52,
+      "vat_type": "default",
+      "tax_rate": 16,
+      "stock_quantity": 120,
+      "low_stock_threshold": 12,
+      "fractional_quantity_allowed": false,
+      "active": true,
+      "created_at": "2026-10-02T12:09:09.564Z",
+      "updated_at": "2026-10-02T12:09:09.564Z"
+    },
+    {
+      "id": "prod_bread_400g",
+      "business_id": "biz_abc_shop_001",
+      "category_id": "cat_bakery_001",
+      "category_name": "Bakery & Bread",
+      "brand_id": "brd_superloaf_001",
+      "brand_name": "Super Loaf",
+      "variant": "White Bread",
+      "size": "400",
+      "unit": "g",
+      "unit_size": "400 g",
+      "name": "Bread",
+      "sku": "SL-BRD-400",
+      "barcode": "616110000201",
+      "description": "Super Loaf Sliced White Bread 400g",
+      "selling_price": 80,
+      "buying_price": 64,
+      "vat_type": "default",
+      "tax_rate": 16,
+      "stock_quantity": 90,
+      "low_stock_threshold": 10,
+      "fractional_quantity_allowed": false,
+      "active": true,
+      "created_at": "2026-10-02T12:09:09.564Z",
+      "updated_at": "2026-10-02T12:09:09.564Z"
+    }
+  ],
+  "inventory_movements": [],
+  "customers": [],
+  "sales": [],
+  "sale_items": [],
+  "payments": [],
+  "mpesa_configs": [
+    {
+      "id": "mpesa_cfg_abc_001",
+      "business_id": "biz_abc_shop_001",
+      "environment": "test",
+      "shortcode": "174379",
+      "consumer_key_masked": "••••••••••••1743",
+      "passkey_masked": "••••••••••••bfb2",
+      "active": true,
+      "has_credentials": true,
+      "updated_at": "2026-10-02T12:09:09.564Z"
+    }
+  ],
+  "mpesa_callbacks": [],
+  "receipts": [],
+  "qr_payment_sessions": [],
+  "expenses": [],
+  "notifications": [],
+  "audit_logs": [],
+  "support_tickets": [
+    {
+      "id": "inquiry_059a524e625e",
+      "business_id": "public_lead",
+      "business_name": "Nairobi Fresh Market",
+      "user_id": "public_visitor",
+      "user_name": "Jane Mwangi",
+      "subject": "[Lead] POS & M-Pesa Setup - Jane Mwangi",
+      "category": "account",
+      "description": "Contact Phone: 0712345678\nContact Email: jane@nairobifresh.co.ke\nBusiness: Nairobi Fresh Market\n\nMessage:\nHello BRISK team, I need to setup counter POS and M-Pesa STK push for 3 branches.",
+      "priority": "medium",
+      "status": "open",
+      "created_at": "2026-10-02T12:41:57.254Z",
+      "updated_at": "2026-10-02T12:41:57.254Z"
+    }
+  ],
+  "receipt_counters": {
+    "biz_abc_shop_001": 124
+  },
+  "brands": [
+    {
+      "id": "brd_brookside_001",
+      "business_id": "biz_abc_shop_001",
+      "name": "Brookside",
+      "created_at": "2026-10-02T12:09:09.564Z"
+    },
+    {
+      "id": "brd_kcc_001",
+      "business_id": "biz_abc_shop_001",
+      "name": "KCC",
+      "created_at": "2026-10-02T12:09:09.564Z"
+    },
+    {
+      "id": "brd_superloaf_001",
+      "business_id": "biz_abc_shop_001",
+      "name": "Super Loaf",
+      "created_at": "2026-10-02T12:09:09.564Z"
+    }
+  ],
+  "sms_configs": [
+    {
+      "id": "sms_cfg_abc_001",
+      "business_id": "biz_abc_shop_001",
+      "provider": "simulator",
+      "sender_id": "ABCSHOP",
+      "status": "simulated",
+      "enabled": true,
+      "notify_payment_success": true,
+      "notify_receipt_ready": true,
+      "notify_payment_failed": false,
+      "notify_refund": true,
+      "created_at": "2026-10-02T12:09:09.564Z",
+      "updated_at": "2026-10-02T12:09:09.564Z"
+    }
+  ],
+  "customer_notifications": [],
+  "email_verifications": [],
+  "password_resets": [],
+  "worker_invitations": [],
+  "login_activities": [],
+  "contact_messages": [
+    {
+      "name": "Jane Mwangi",
+      "business_name": "Nairobi Fresh Market",
+      "email": "jane@nairobifresh.co.ke",
+      "phone": "0712345678",
+      "subject": "POS & M-Pesa Setup",
+      "message": "Hello BRISK team, I need to setup counter POS and M-Pesa STK push for 3 branches.",
+      "id": "cmsg_886fdb7ff9ef",
+      "status": "NEW",
+      "created_at": "2026-10-02T12:41:57.253Z"
+    }
+  ],
+  "payment_configs": [],
+  "bank_transfers": []
+}
