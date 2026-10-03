@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from '@google/genai';
-import { ExtractedProductAI } from '../src/types';
+import { ExtractedProductAI } from '../src/types/index';
 
 function guessCategory(name: string): string {
   const n = name.toLowerCase();
@@ -14,9 +14,6 @@ function capitalizeWords(str: string): string {
   return str.replace(/\b\w/g, l => l.toUpperCase());
 }
 
-/**
- * Intelligent rule-based fallback parser for Kenyan retail inventory natural language
- */
 /**
  * Intelligent rule-based fallback parser for Kenyan retail inventory natural language
  * Handles complex multi-attribute phrases like:
@@ -46,12 +43,10 @@ function extractBrand(text: string): { brand?: string; cleanedText: string } {
 }
 
 function parseProductsRuleBased(text: string): ExtractedProductAI[] {
-  // Pre-process: join attribute clauses that belong to the same product (e.g. ", buying price 60" or ", stock 50")
   const normalized = text
     .replace(/,\s*(?=(?:buying|selling|cost|price|stock|qty|threshold|bp|sp|each)\b)/gi, ' ')
     .replace(/\s+/g, ' ');
 
-  // Split into product segments by comma, semicolon, newline, or "and" followed by product/brand
   const segments = normalized
     .split(/[\n;]|,\s*(?=[a-zA-Z])|(?:\band\s+(?=[a-zA-Z\s]+(?:\d+\s*(?:ml|l|kg|g|litres?)|at\s+\d+)))/i)
     .map(s => s.trim())
@@ -72,7 +67,7 @@ function parseProductsRuleBased(text: string): ExtractedProductAI[] {
     }
 
     // 2. Extract Stock Quantity
-    let stockQuantity = 50; // default
+    let stockQuantity = 50;
     const stockMatch = segment.match(/(?:initial\s*stock|stock\s*quantity|stock|qty|quantity)\s*(?:is|at|of)?\s*(\d+(?:\.\d+)?)\s*(?:bottles?|packets?|packs?|pieces?|units?|bags?|cartons?|boxes?|crates?|tins?|cans?)?/i);
     if (stockMatch) {
       stockQuantity = parseFloat(stockMatch[1]);
@@ -121,7 +116,6 @@ function parseProductsRuleBased(text: string): ExtractedProductAI[] {
     let productName = capitalizeWords(remainingName || 'Product');
     let variant: string | undefined;
 
-    // Detect variant from common retail descriptors
     if (/fresh\s*milk/i.test(remainingName)) {
       variant = 'Fresh Milk';
       productName = 'Fresh Milk';
@@ -139,7 +133,6 @@ function parseProductsRuleBased(text: string): ExtractedProductAI[] {
       productName = 'Brown Bread';
     }
 
-    // Guess category
     let category = guessCategory(productName + ' ' + (brand || ''));
     if (/milk/i.test(productName) || /milk/i.test(rawSegment)) {
       category = 'Milk';
@@ -165,23 +158,30 @@ function parseProductsRuleBased(text: string): ExtractedProductAI[] {
   return results;
 }
 
+function getGeminiClient(): GoogleGenAI | null {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey === 'MY_GEMINI_API_KEY') {
+    return null;
+  }
+  return new GoogleGenAI({
+    apiKey,
+    httpOptions: {
+      headers: {
+        'User-Agent': 'aistudio-build',
+      },
+    },
+  });
+}
+
 /**
- * Parses natural language input using Gemini API or rule-based fallback
+ * 1. AI Natural Language Product Parser
+ * Uses Gemini API to extract structured Kenyan retail inventory items.
  */
 export async function parseProductsWithAI(naturalText: string): Promise<ExtractedProductAI[]> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const ai = getGeminiClient();
 
-  if (apiKey && apiKey !== 'MY_GEMINI_API_KEY') {
+  if (ai) {
     try {
-      const ai = new GoogleGenAI({
-        apiKey,
-        httpOptions: {
-          headers: {
-            'User-Agent': 'aistudio-build',
-          },
-        },
-      });
-
       const prompt = `Extract product inventory entries from this user message:
 "${naturalText}"
 
@@ -239,10 +239,184 @@ Return a JSON array of objects with the following properties:
         }
       }
     } catch (err: any) {
-      console.warn('Gemini API parse failed, falling back to rule-based parser:', err.message);
+      console.warn('[AI PARSE] Gemini primary parse failed, falling back to rule-based parser:', err.message);
     }
   }
 
   // Robust rule-based fallback
   return parseProductsRuleBased(naturalText);
+}
+
+/**
+ * 2. AI Business Insights Generator
+ * Analyzes business performance metrics and generates strategic retail advice.
+ */
+export async function generateBusinessInsightsWithAI(data: {
+  businessName: string;
+  totalSales: number;
+  totalTransactions: number;
+  topProducts: Array<{ name: string; quantity: number; revenue: number }>;
+  lowStockItems: Array<{ name: string; currentStock: number; threshold: number }>;
+  expensesTotal: number;
+}): Promise<{
+  summary: string;
+  recommendations: string[];
+  stockAlertMessage: string;
+  profitabilityScore: number;
+}> {
+  const ai = getGeminiClient();
+
+  if (ai) {
+    try {
+      const prompt = `You are a Kenyan retail business intelligence expert advising the owner of "${data.businessName}".
+Analyze these figures:
+- Total Sales: KES ${data.totalSales.toLocaleString()}
+- Total Transactions: ${data.totalTransactions}
+- Top Selling Items: ${JSON.stringify(data.topProducts)}
+- Low Stock Alerts: ${JSON.stringify(data.lowStockItems)}
+- Total Operating Expenses: KES ${data.expensesTotal.toLocaleString()}
+
+Provide concise, practical advice for a Kenyan shop/supermarket/retailer.
+Return a JSON object with:
+- summary: string (2-3 sentences overview of today's health)
+- recommendations: array of 3 strings (actionable business tips, e.g. restocking, margin adjustments, popular product bundling)
+- stockAlertMessage: string (direct guidance on what to restock first)
+- profitabilityScore: number (1 to 100)`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.8-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              summary: { type: Type.STRING },
+              recommendations: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+              },
+              stockAlertMessage: { type: Type.STRING },
+              profitabilityScore: { type: Type.NUMBER },
+            },
+            required: ['summary', 'recommendations', 'stockAlertMessage', 'profitabilityScore'],
+          },
+        },
+      });
+
+      const raw = response.text?.trim();
+      if (raw) {
+        return JSON.parse(raw);
+      }
+    } catch (err: any) {
+      console.warn('[AI INSIGHTS] Gemini insights error, using heuristic fallback:', err.message);
+    }
+  }
+
+  // Fallback heuristics
+  const netRevenue = Math.max(0, data.totalSales - data.expensesTotal);
+  const score = Math.min(95, Math.max(40, Math.round((netRevenue / (data.totalSales || 1)) * 100)));
+  const topNames = data.topProducts.slice(0, 3).map(p => p.name).join(', ') || 'General items';
+
+  return {
+    summary: `Business operations are steady with KES ${data.totalSales.toLocaleString()} in gross volume across ${data.totalTransactions} transactions. Fast-moving categories include ${topNames}.`,
+    recommendations: [
+      data.lowStockItems.length > 0
+        ? `Re-order ${data.lowStockItems.length} low-stock items before weekend rush to avoid missed sales.`
+        : 'Maintain inventory turnover and consider bundling high-margin items.',
+      'Encourage instant M-Pesa STK push checkouts at the register to speed up queue turnaround.',
+      'Audit daily supplier invoices to keep purchasing costs within 65-70% of gross retail prices.',
+    ],
+    stockAlertMessage: data.lowStockItems.length > 0
+      ? `Priority restocking needed for: ${data.lowStockItems.map(i => i.name).join(', ')}.`
+      : 'All primary inventory levels are currently above reorder thresholds.',
+    profitabilityScore: score,
+  };
+}
+
+/**
+ * 3. AI Smart Assistant
+ * Interactive dialogue with an AI retail assistant.
+ */
+export async function chatWithAIAssistant(
+  message: string,
+  businessContext: {
+    businessName: string;
+    productCount: number;
+    todaySales: number;
+  }
+): Promise<string> {
+  const ai = getGeminiClient();
+
+  if (ai) {
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.8-flash',
+        contents: message,
+        config: {
+          systemInstruction: `You are BRISK AI, an expert Kenyan retail assistant for "${businessContext.businessName}".
+Current store metrics:
+- Active products: ${businessContext.productCount}
+- Today's sales volume: KES ${businessContext.todaySales}
+Provide direct, concise, and helpful answers about retail operations, M-Pesa payments, KRA eTIMS VAT compliance, stock optimization, and store profitability in Kenya. Keep responses under 150 words unless detailed calculations are requested.`,
+        },
+      });
+
+      if (response.text) {
+        return response.text.trim();
+      }
+    } catch (err: any) {
+      console.warn('[AI CHAT] Gemini chat failed:', err.message);
+    }
+  }
+
+  return `Hello from ${businessContext.businessName} Assistant. Currently managing ${businessContext.productCount} products with KES ${businessContext.todaySales.toLocaleString()} in sales. How can I assist you with inventory, transactions, or payment setups today?`;
+}
+
+/**
+ * 4. AI Smart SMS Generator
+ * Composes tailored SMS text for receipts and promotional campaigns.
+ */
+export async function generateSmartSmsWithAI(params: {
+  businessName: string;
+  customerName?: string;
+  totalAmount?: number;
+  saleNumber?: string;
+  purpose: 'receipt' | 'promo' | 'reminder';
+  extraNotes?: string;
+}): Promise<string> {
+  const ai = getGeminiClient();
+  const name = params.customerName || 'Customer';
+  const amount = params.totalAmount ? `KES ${params.totalAmount.toLocaleString()}` : '';
+
+  if (ai) {
+    try {
+      const prompt = `Compose a short, warm, professional 1-segment SMS (under 140 characters) for a Kenyan business.
+Business: ${params.businessName}
+Customer: ${name}
+Sale: ${params.saleNumber || ''}
+Amount: ${amount}
+Type: ${params.purpose}
+Notes: ${params.extraNotes || ''}
+
+Return only the plain text message, no quotes, no commentary.`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.8-flash',
+        contents: prompt,
+      });
+
+      if (response.text) {
+        return response.text.trim().replace(/^["']|["']$/g, '');
+      }
+    } catch (err: any) {
+      console.warn('[AI SMS] Gemini SMS generation failed:', err.message);
+    }
+  }
+
+  // Reliable fallback templates
+  if (params.purpose === 'receipt') {
+    return `Thank you ${name}! Your payment of ${amount} to ${params.businessName} (${params.saleNumber || ''}) was received. Karibu tena!`;
+  }
+  return `Special offer from ${params.businessName}: Enjoy exclusive discounts on your favorite essentials this week. Karibu!`;
 }

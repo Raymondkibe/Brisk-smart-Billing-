@@ -138,23 +138,31 @@ export class SmsService {
       };
     }
 
-    // Default to 'simulator' provider if no config or not explicitly connected with real credentials
-    const provider = config?.enabled ? (config.provider || 'simulator') : 'simulator';
-    const senderId = config?.sender_id || params.businessName.slice(0, 11).toUpperCase() || 'BRISK BILL';
+    // Check if configuration exists in DB or process.env
+    const atApiKey = config?.api_key_secret || process.env.AFRICASTALKING_API_KEY;
+    const atUsername = config?.api_username || process.env.AFRICASTALKING_USERNAME;
+    const twilioSid = config?.account_sid || process.env.TWILIO_ACCOUNT_SID;
+    const twilioAuth = config?.api_key_secret || process.env.TWILIO_AUTH_TOKEN;
+
+    const provider = config?.enabled
+      ? (config.provider || (atApiKey ? 'africastalking' : twilioSid ? 'twilio' : 'simulator'))
+      : (atApiKey ? 'africastalking' : twilioSid ? 'twilio' : 'simulator');
+
+    const senderId = config?.sender_id || process.env.AFRICASTALKING_SENDER_ID || params.businessName.slice(0, 11).toUpperCase() || 'BRISK BILL';
 
     try {
       // 1. Africa's Talking SMS API Integration
-      if (provider === 'africastalking' && config?.api_key_secret && config?.api_username) {
+      if (provider === 'africastalking' && atApiKey && atUsername) {
         const formData = new URLSearchParams();
-        formData.append('username', config.api_username);
+        formData.append('username', atUsername);
         formData.append('to', normalizedPhone);
         formData.append('message', message);
-        if (config.sender_id) formData.append('from', config.sender_id);
+        if (senderId) formData.append('from', senderId);
 
         const atRes = await fetch('https://api.africastalking.com/version1/messaging', {
           method: 'POST',
           headers: {
-            'apiKey': config.api_key_secret,
+            'apiKey': atApiKey,
             'Content-Type': 'application/x-www-form-urlencoded',
             'Accept': 'application/json',
           },
@@ -188,12 +196,12 @@ export class SmsService {
       }
 
       // 2. Twilio REST API Integration
-      if (provider === 'twilio' && config?.account_sid && config?.api_key_secret) {
-        const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${config.account_sid}/Messages.json`;
-        const auth = Buffer.from(`${config.account_sid}:${config.api_key_secret}`).toString('base64');
+      if (provider === 'twilio' && twilioSid && twilioAuth) {
+        const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`;
+        const auth = Buffer.from(`${twilioSid}:${twilioAuth}`).toString('base64');
         const formData = new URLSearchParams();
         formData.append('To', normalizedPhone);
-        formData.append('From', config.sender_id || 'BRISKBILL');
+        formData.append('From', senderId || process.env.TWILIO_PHONE_NUMBER || 'BRISKBILL');
         formData.append('Body', message);
 
         const twilioRes = await fetch(twilioUrl, {

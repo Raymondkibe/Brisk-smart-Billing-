@@ -23,7 +23,7 @@ import {
 
 // Create base Axios instance
 export const axiosInstance: AxiosInstance = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -517,8 +517,53 @@ export const productsApi = {
 
   parseProductsWithAi: async (description: string) => {
     const res = await axiosInstance.post<{ products: Partial<Product>[] }>('/ai/parse-products', {
+      text: description,
       description,
     });
+    return res.data;
+  },
+};
+
+/* =========================================================================
+   3b. AI SERVICES (Powered by Gemini)
+   ========================================================================= */
+export const aiApi = {
+  parseProducts: async (prompt: string) => {
+    const res = await axiosInstance.post<{ success: boolean; products: Partial<Product>[] }>('/ai/parse-products', {
+      text: prompt,
+      description: prompt,
+    });
+    return res.data;
+  },
+
+  getInsights: async (params?: { businessName?: string; totalSales?: number; totalTransactions?: number }) => {
+    const res = await axiosInstance.post<{
+      success: boolean;
+      insights: {
+        summary: string;
+        recommendations: string[];
+        stockAlertMessage: string;
+        profitabilityScore: number;
+      };
+    }>('/ai/insights', params || {});
+    return res.data;
+  },
+
+  askAssistant: async (message: string) => {
+    const res = await axiosInstance.post<{ success: boolean; reply: string }>('/ai/assistant', {
+      message,
+    });
+    return res.data;
+  },
+
+  composeSms: async (params: {
+    customerName?: string;
+    totalAmount?: number;
+    saleNumber?: string;
+    purpose?: 'receipt' | 'promo' | 'reminder';
+    extraNotes?: string;
+  }) => {
+    const res = await axiosInstance.post<{ success: boolean; message: string }>('/ai/compose-sms', params);
     return res.data;
   },
 };
@@ -1029,6 +1074,7 @@ export const api = {
   settings: settingsApi,
   support: supportApi,
   admin: adminApi,
+  ai: aiApi,
   client: axiosInstance,
   cache: {
     get: cachedGet,

@@ -3,7 +3,12 @@ import crypto from 'node:crypto';
 import QRCode from 'qrcode';
 import { db, generateId, generateToken, hashString } from './db';
 import { MpesaService } from './mpesa';
-import { parseProductsWithAI } from './ai';
+import {
+  parseProductsWithAI,
+  generateBusinessInsightsWithAI,
+  chatWithAIAssistant,
+  generateSmartSmsWithAI,
+} from './ai';
 import { calculateItemPrice } from './units';
 import { SmsService, normalizePhoneNumber, maskPhoneNumber } from './sms';
 import { EmailService } from './email';
@@ -2032,16 +2037,143 @@ apiRouter.get('/receipts/verify/:token', (req: Request, res: Response) => {
 // ============================================================================
 
 // AI Natural Language Product Parser (Sections 17 & 61)
+// AI Natural Language Product Parser (Sections 17 & 61)
 apiRouter.post('/ai/parse-products', async (req: Request, res: Response) => {
   try {
-    const { text } = req.body;
-    if (!text || typeof text !== 'string') {
-      return res.status(400).json({ error: 'Text prompt is required.' });
+    const rawInput = req.body.text || req.body.description || req.body.prompt;
+    if (!rawInput || typeof rawInput !== 'string') {
+      return res.status(400).json({ error: 'Text or description prompt is required.' });
     }
-    const extracted = await parseProductsWithAI(text);
+    const extracted = await parseProductsWithAI(rawInput.trim());
     return res.json({ success: true, products: extracted });
   } catch (err: any) {
     return res.status(500).json({ error: err.message });
+  }
+});
+
+// AI Strategic Business & Inventory Insights
+apiRouter.post('/ai/insights', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const businessId = req.businessId;
+    let businessName = 'Brisk Business';
+    let totalSales = 0;
+    let totalTransactions = 0;
+    let topProducts: Array<{ name: string; quantity: number; revenue: number }> = [];
+    let lowStockItems: Array<{ name: string; currentStock: number; threshold: number }> = [];
+    let expensesTotal = 0;
+
+    if (businessId) {
+      const biz = db.getBusinessById(businessId);
+      if (biz) businessName = biz.name;
+
+      const sales = db.getSales(businessId);
+      const paidSales = sales.filter(s => s.payment_status === 'PAID');
+      totalSales = paidSales.reduce((acc, s) => acc + s.total, 0);
+      totalTransactions = paidSales.length;
+
+      // Group products
+      const prodMap = new Map<string, { name: string; quantity: number; revenue: number }>();
+      for (const sale of paidSales) {
+        for (const item of sale.items) {
+          const name = item.product_name_snapshot || 'Item';
+          const cur = prodMap.get(name) || { name, quantity: 0, revenue: 0 };
+          cur.quantity += item.quantity;
+          cur.revenue += item.unit_price * item.quantity;
+          prodMap.set(name, cur);
+        }
+      }
+      topProducts = Array.from(prodMap.values()).sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+
+      const products = db.getProducts(businessId);
+      lowStockItems = products
+        .filter(p => p.stock_quantity <= p.low_stock_threshold)
+        .map(p => ({ name: p.name, currentStock: p.stock_quantity, threshold: p.low_stock_threshold }));
+
+      const expenses = db.getExpenses(businessId);
+      expensesTotal = expenses.reduce((acc, e) => acc + e.amount, 0);
+    }
+
+    // Override with custom body params if provided
+    if (req.body.businessName) businessName = req.body.businessName;
+    if (req.body.totalSales !== undefined) totalSales = Number(req.body.totalSales);
+    if (req.body.totalTransactions !== undefined) totalTransactions = Number(req.body.totalTransactions);
+
+    const insights = await generateBusinessInsightsWithAI({
+      businessName,
+      totalSales,
+      totalTransactions,
+      topProducts,
+      lowStockItems,
+      expensesTotal,
+    });
+
+    return res.json({ success: true, insights });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message || 'Failed to generate AI insights.' });
+  }
+});
+
+// AI Store Assistant Dialogue
+apiRouter.post('/ai/assistant', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { message } = req.body;
+    if (!message || typeof message !== 'string') {
+      return res.status(400).json({ error: 'Message is required.' });
+    }
+
+    const businessId = req.businessId;
+    let businessName = 'Brisk Retail Store';
+    let productCount = 0;
+    let todaySales = 0;
+
+    if (businessId) {
+      const biz = db.getBusinessById(businessId);
+      if (biz) businessName = biz.name;
+      productCount = db.getProducts(businessId).length;
+
+      const sales = db.getSales(businessId);
+      const today = new Date().toISOString().slice(0, 10);
+      todaySales = sales
+        .filter(s => s.created_at.startsWith(today) && s.payment_status === 'PAID')
+        .reduce((sum, s) => sum + s.total, 0);
+    }
+
+    const reply = await chatWithAIAssistant(message.trim(), {
+      businessName,
+      productCount,
+      todaySales,
+    });
+
+    return res.json({ success: true, reply });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message || 'AI assistant request failed.' });
+  }
+});
+
+// AI Smart SMS Composer
+apiRouter.post('/ai/compose-sms', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { customerName, totalAmount, saleNumber, purpose, extraNotes } = req.body;
+    const businessId = req.businessId;
+    let businessName = 'Brisk Smart Store';
+
+    if (businessId) {
+      const biz = db.getBusinessById(businessId);
+      if (biz) businessName = biz.name;
+    }
+
+    const text = await generateSmartSmsWithAI({
+      businessName,
+      customerName,
+      totalAmount: totalAmount ? Number(totalAmount) : undefined,
+      saleNumber,
+      purpose: purpose || 'receipt',
+      extraNotes,
+    });
+
+    return res.json({ success: true, message: text });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message || 'Failed to compose smart SMS.' });
   }
 });
 
