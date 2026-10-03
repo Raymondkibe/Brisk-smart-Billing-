@@ -2,43 +2,83 @@ import React, { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
 import {
   Printer,
-  Download,
   Share2,
-  CheckCircle2,
   X,
-  ExternalLink,
   Copy,
   Check,
   ShieldCheck,
-  ShoppingBag
+  Building2,
+  Phone,
+  MapPin,
+  Calendar,
+  Clock,
+  User,
+  CreditCard,
+  Receipt as ReceiptIcon,
+  Sparkles,
+  Smartphone
 } from 'lucide-react';
 import { Receipt } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 interface ThermalReceiptModalProps {
   receipt: Receipt | null;
   onClose: () => void;
+  autoPrint?: boolean;
 }
 
-export const ThermalReceiptModal: React.FC<ThermalReceiptModalProps> = ({ receipt, onClose }) => {
+export const ThermalReceiptModal: React.FC<ThermalReceiptModalProps> = ({
+  receipt,
+  onClose,
+  autoPrint = false,
+}) => {
+  const { activeBusiness } = useAuth();
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [copied, setCopied] = useState(false);
+  const [paperSize, setPaperSize] = useState<'80mm' | '58mm'>('80mm');
+  const [showStoreBranding, setShowStoreBranding] = useState(true);
 
+  // Generate QR Code for live verification
   useEffect(() => {
     if (receipt) {
       const verifyUrl = `${window.location.origin}/verify-receipt/${receipt.verification_token}`;
       QRCode.toDataURL(verifyUrl, {
         margin: 1,
-        width: 180,
-        color: { dark: '#0f172a', light: '#ffffff' }
-      }).then(setQrDataUrl).catch(console.error);
+        width: 160,
+        color: { dark: '#000000', light: '#ffffff' },
+      })
+        .then(setQrDataUrl)
+        .catch(console.error);
     }
   }, [receipt]);
+
+  // Handle optional auto-print when opened
+  useEffect(() => {
+    if (receipt && autoPrint && qrDataUrl) {
+      const timer = setTimeout(() => {
+        window.print();
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [receipt, autoPrint, qrDataUrl]);
 
   if (!receipt) return null;
 
   const sale = receipt.sale;
-  const business = receipt.business;
   const payment = receipt.payment;
+  
+  // Prefer receipt.business, fallback to active authenticated business
+  const business = receipt.business || (activeBusiness ? {
+    name: activeBusiness.name,
+    logo_url: activeBusiness.logo_url,
+    location: activeBusiness.location,
+    address: activeBusiness.address,
+    phone: activeBusiness.phone,
+    email: activeBusiness.email,
+    receipt_footer: activeBusiness.receipt_footer,
+    currency: activeBusiness.currency || 'KES',
+  } : undefined);
+
   const verifyUrl = `${window.location.origin}/verify-receipt/${receipt.verification_token}`;
 
   const handlePrint = () => {
@@ -55,7 +95,7 @@ export const ThermalReceiptModal: React.FC<ThermalReceiptModalProps> = ({ receip
     if (navigator.share) {
       navigator.share({
         title: `Receipt ${receipt.receipt_number} from ${business?.name || 'BRISK BILLING'}`,
-        text: `Here is your verified digital receipt for KES ${sale?.total.toLocaleString()}:`,
+        text: `Here is your verified digital receipt for KES ${sale?.total?.toLocaleString()}:`,
         url: verifyUrl,
       }).catch(() => {});
     } else {
@@ -64,214 +104,331 @@ export const ThermalReceiptModal: React.FC<ThermalReceiptModalProps> = ({ receip
   };
 
   const formatDate = (dateStr: string) => {
-    const d = new Date(dateStr);
-    return {
-      date: d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }),
-      time: d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
-    };
+    try {
+      const d = new Date(dateStr);
+      return {
+        date: d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+        time: d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      };
+    } catch {
+      return { date: 'N/A', time: 'N/A' };
+    }
   };
 
   const { date, time } = formatDate(receipt.issued_at);
+  const currency = business?.currency || 'KES';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs overflow-y-auto no-print">
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-xs overflow-y-auto">
+      
+      {/* Modal Dialog Card (Interactive Screen Shell) */}
+      <div className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-4 flex flex-col max-h-[92vh]">
         
-        {/* Top Header Bar */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50">
+        {/* Modal Top Header (Screen only, hidden in print) */}
+        <div className="no-print flex items-center justify-between px-5 py-3.5 border-b border-slate-100 bg-slate-50/80">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-700">Digital Receipt Issued</span>
+            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+              <Printer className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-slate-900 leading-tight">Thermal Receipt Print Preview</h2>
+              <p className="text-[11px] text-slate-500 font-mono">
+                {receipt.receipt_number} · {date}
+              </p>
+            </div>
           </div>
+
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-200/60 transition-colors"
+            className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 rounded-lg transition-colors cursor-pointer"
+            aria-label="Close"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Scrollable Receipt Preview */}
-        <div className="p-6 overflow-y-auto max-h-[75vh]">
-          {/* Paper Receipt Simulation */}
-          <div id="printable-receipt" className="thermal-receipt bg-white text-slate-900 border border-dashed border-slate-300 rounded-xl p-6 shadow-xs font-mono text-sm leading-relaxed">
-            
-            {/* Business Header */}
-            <div className="text-center pb-4 border-b border-dashed border-slate-300">
-              <div className="w-10 h-10 mx-auto mb-2 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-lg font-sans">
-                {business?.name ? business.name.slice(0, 2).toUpperCase() : 'BB'}
+        {/* Paper & Layout Options Bar (Screen only) */}
+        <div className="no-print px-5 py-2.5 bg-slate-100/70 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+          {/* Paper Size Switcher */}
+          <div className="flex items-center gap-2">
+            <span className="text-slate-600 font-medium text-[11px]">Paper Width:</span>
+            <div className="inline-flex rounded-lg bg-slate-200/70 p-0.5">
+              <button
+                type="button"
+                onClick={() => setPaperSize('80mm')}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                  paperSize === '80mm'
+                    ? 'bg-white text-slate-900 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                80mm (Standard POS)
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaperSize('58mm')}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                  paperSize === '58mm'
+                    ? 'bg-white text-slate-900 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                58mm (Handheld POS)
+              </button>
+            </div>
+          </div>
+
+          {/* Store Branding Toggle */}
+          <label className="flex items-center gap-1.5 text-[11px] text-slate-600 font-medium cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={showStoreBranding}
+              onChange={e => setShowStoreBranding(e.target.checked)}
+              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-3.5 h-3.5"
+            />
+            <span>Store Header & Details</span>
+          </label>
+        </div>
+
+        {/* Scrollable Thermal Paper Canvas */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-100 flex justify-center items-start">
+          
+          {/* THE PRINTABLE TARGET
+              This DOM element is isolated by @media print in index.css */}
+          <div
+            id="thermal-print-target"
+            className={`thermal-receipt bg-white text-slate-900 border border-dashed border-slate-300 rounded-sm shadow-md font-mono text-[12px] leading-tight select-text transition-all ${
+              paperSize === '80mm' ? 'w-[320px] p-5' : 'w-[250px] p-3.5 paper-58mm'
+            }`}
+          >
+            {/* Top Paper Perforation Line (Visual Screen Only) */}
+            <div className="no-print h-1.5 receipt-paper-edge -mt-5 -mx-5 mb-4 opacity-30" />
+
+            {/* STORE BRANDING HEADER */}
+            {showStoreBranding && (
+              <div className="text-center pb-3 border-b border-dashed border-slate-400">
+                {/* Store Monogram or Logo */}
+                {business?.logo_url ? (
+                  <img
+                    src={business.logo_url}
+                    alt={business.name}
+                    className="w-12 h-12 object-contain mx-auto mb-1.5 filter grayscale contrast-125"
+                  />
+                ) : (
+                  <div className="w-10 h-10 mx-auto mb-1 rounded-md bg-slate-900 text-white flex items-center justify-center font-bold text-base font-sans tracking-wider">
+                    {business?.name ? business.name.slice(0, 2).toUpperCase() : 'BB'}
+                  </div>
+                )}
+
+                <h1 className="text-base font-black uppercase tracking-tight text-slate-950 font-sans">
+                  {business?.name || 'BRISK STORE'}
+                </h1>
+                
+                {business?.location && (
+                  <p className="text-[11px] text-slate-700 mt-0.5 font-sans">
+                    {business.location}
+                  </p>
+                )}
+                {business?.address && (
+                  <p className="text-[10px] text-slate-600 font-sans">
+                    {business.address}
+                  </p>
+                )}
+                {business?.phone && (
+                  <p className="text-[11px] text-slate-700 font-sans">
+                    Tel: {business.phone}
+                  </p>
+                )}
+                {activeBusiness?.vat_number && (
+                  <p className="text-[10px] text-slate-600 font-sans">
+                    KRA PIN: {activeBusiness.vat_number}
+                  </p>
+                )}
               </div>
-              <h2 className="text-base font-bold uppercase tracking-tight text-slate-900 font-sans">
-                {business?.name || 'ABC SHOP'}
-              </h2>
-              <p className="text-xs text-slate-600 mt-0.5">{business?.location || 'Kiambu, Kenya'}</p>
-              {business?.phone && <p className="text-xs text-slate-500">Tel: {business.phone}</p>}
-              
-              <div className="mt-3 pt-2 border-t border-dotted border-slate-200">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-700">SALES RECEIPT</span>
-              </div>
+            )}
+
+            {/* RECEIPT TITLE & SEPARATORS */}
+            <div className="text-center py-2 border-b border-dashed border-slate-400">
+              <span className="text-[12px] font-bold tracking-widest uppercase text-slate-900">
+                OFFICIAL SALES RECEIPT
+              </span>
             </div>
 
-            {/* Receipt Metadata */}
-            <div className="py-3 text-xs border-b border-dashed border-slate-300 space-y-1">
+            {/* TRANSACTION METADATA */}
+            <div className="py-2.5 border-b border-dashed border-slate-400 space-y-1 text-[11px]">
               <div className="flex justify-between">
-                <span className="text-slate-500">Receipt No:</span>
-                <span className="font-bold text-slate-900">{receipt.receipt_number}</span>
+                <span className="text-slate-600">RECEIPT NO:</span>
+                <span className="font-bold text-slate-950">{receipt.receipt_number}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Sale No:</span>
-                <span className="text-slate-800">{sale?.sale_number}</span>
+                <span className="text-slate-600">SALE REF:</span>
+                <span className="text-slate-900">{sale?.sale_number || 'N/A'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Date:</span>
-                <span className="text-slate-800">{date}</span>
+                <span className="text-slate-600">DATE & TIME:</span>
+                <span className="text-slate-900">{date} {time}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Time:</span>
-                <span className="text-slate-800">{time}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Cashier / Staff:</span>
-                <span className="text-slate-800">{sale?.worker_name || 'Staff'}</span>
+                <span className="text-slate-600">CASHIER:</span>
+                <span className="text-slate-900">{sale?.worker_name || 'Counter Staff'}</span>
               </div>
               {sale?.customer_name && (
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Customer:</span>
-                  <span className="text-slate-800">{sale.customer_name}</span>
+                  <span className="text-slate-600">CUSTOMER:</span>
+                  <span className="text-slate-900 truncate max-w-[150px]">{sale.customer_name}</span>
                 </div>
               )}
             </div>
 
-            {/* Itemized Table */}
-            <div className="py-3 border-b border-dashed border-slate-300">
-              <div className="grid grid-cols-12 text-xs font-bold text-slate-600 pb-1 border-b border-slate-200">
-                <div className="col-span-6">Item</div>
-                <div className="col-span-2 text-center">Qty</div>
-                <div className="col-span-4 text-right">Total</div>
+            {/* ITEMIZED PRODUCTS LIST */}
+            <div className="py-2.5 border-b border-dashed border-slate-400">
+              <div className="flex justify-between font-bold text-[11px] text-slate-900 pb-1.5 border-b border-dotted border-slate-400">
+                <span className="w-1/2">ITEM / DESCRIPTION</span>
+                <span className="w-1/4 text-center">QTY</span>
+                <span className="w-1/4 text-right">TOTAL</span>
               </div>
 
-              <div className="divide-y divide-dotted divide-slate-100 py-1">
-                {sale?.items.map((item, idx) => (
-                  <div key={idx} className="grid grid-cols-12 text-xs py-1.5">
-                    <div className="col-span-6 font-medium text-slate-800 truncate pr-1">
-                      {item.product_name_snapshot}
+              <div className="divide-y divide-dotted divide-slate-200 py-1 space-y-1.5">
+                {sale?.items && sale.items.length > 0 ? (
+                  sale.items.map((item, idx) => (
+                    <div key={idx} className="pt-1.5 text-[11px]">
+                      <div className="font-medium text-slate-950 truncate">
+                        {item.product_name_snapshot}
+                      </div>
+                      <div className="flex justify-between text-slate-600 text-[10px] mt-0.5">
+                        <span>
+                          {item.quantity} {item.unit || 'pcs'} × {currency} {item.unit_price?.toLocaleString()}
+                        </span>
+                        <span className="font-bold text-slate-900 tabular-nums text-[11px]">
+                          {currency} {(item.unit_price * item.quantity).toLocaleString()}
+                        </span>
+                      </div>
                     </div>
-                    <div className="col-span-2 text-center text-slate-600">
-                      {item.quantity}
-                    </div>
-                    <div className="col-span-4 text-right font-medium text-slate-900 tabular-nums">
-                      {item.total.toLocaleString()}
-                    </div>
+                  ))
+                ) : (
+                  <div className="py-2 text-center text-slate-500 italic text-[11px]">
+                    Standard Sale Transaction
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
-            {/* Totals & Monetary Breakdown */}
-            <div className="py-3 border-b border-dashed border-slate-300 text-xs space-y-1">
-              <div className="flex justify-between text-slate-600">
+            {/* FINANCIAL TOTALS */}
+            <div className="py-2.5 border-b border-dashed border-slate-400 space-y-1 text-[11px]">
+              <div className="flex justify-between text-slate-700">
                 <span>Subtotal</span>
-                <span className="tabular-nums">KES {sale?.subtotal.toLocaleString()}</span>
+                <span className="tabular-nums font-medium">{currency} {sale?.subtotal?.toLocaleString() || '0'}</span>
               </div>
               {sale && sale.discount > 0 && (
-                <div className="flex justify-between text-emerald-600">
+                <div className="flex justify-between text-slate-700">
                   <span>Discount</span>
-                  <span className="tabular-nums">-KES {sale.discount.toLocaleString()}</span>
+                  <span className="tabular-nums font-medium">-{currency} {sale.discount.toLocaleString()}</span>
                 </div>
               )}
               {sale && sale.tax > 0 && (
-                <div className="flex justify-between text-slate-600">
-                  <span>Tax (Included)</span>
-                  <span className="tabular-nums">KES {sale.tax.toLocaleString()}</span>
+                <div className="flex justify-between text-slate-700">
+                  <span>VAT (16% Included)</span>
+                  <span className="tabular-nums font-medium">{currency} {sale.tax.toLocaleString()}</span>
                 </div>
               )}
-              <div className="flex justify-between text-sm font-bold text-slate-900 pt-2 border-t border-slate-200">
-                <span>TOTAL</span>
-                <span className="tabular-nums">KES {sale?.total.toLocaleString()}</span>
+
+              {/* GRAND TOTAL */}
+              <div className="flex justify-between text-[13px] font-black text-slate-950 pt-2 border-t border-slate-900">
+                <span>TOTAL PAID</span>
+                <span className="tabular-nums">{currency} {sale?.total?.toLocaleString() || '0'}</span>
               </div>
             </div>
 
-            {/* Payment Details */}
-            <div className="py-3 border-b border-dashed border-slate-300 text-xs space-y-1">
+            {/* SETTLEMENT & PAYMENT CONFIRMATION */}
+            <div className="py-2.5 border-b border-dashed border-slate-400 space-y-1 text-[11px]">
               <div className="flex justify-between">
-                <span className="text-slate-500">Payment Method:</span>
-                <span className="font-bold text-slate-800">{payment?.method || 'M-PESA'}</span>
+                <span className="text-slate-600">METHOD:</span>
+                <span className="font-bold uppercase text-slate-900">{payment?.method || sale?.payment_method || 'M-PESA'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Payment Status:</span>
-                <span className="font-bold text-emerald-600">PAID</span>
+                <span className="text-slate-600">STATUS:</span>
+                <span className="font-bold text-slate-900">PAID & SETTLED</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">M-Pesa Reference:</span>
-                <span className="font-mono font-bold text-slate-900">{payment?.reference || 'CONFIRMED'}</span>
+                <span className="text-slate-600">REF / CODE:</span>
+                <span className="font-bold text-slate-950">{payment?.reference || 'CONFIRMED'}</span>
               </div>
               {payment?.phone_masked && (
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Account Phone:</span>
-                  <span className="text-slate-800">{payment.phone_masked}</span>
+                  <span className="text-slate-600">CUSTOMER TEL:</span>
+                  <span className="text-slate-900">{payment.phone_masked}</span>
                 </div>
               )}
             </div>
 
-            {/* QR Code Verification Section */}
-            <div className="pt-4 text-center">
+            {/* VERIFICATION QR CODE */}
+            <div className="pt-3 text-center">
               {qrDataUrl && (
-                <div className="inline-block p-2 bg-white rounded-lg border border-slate-200 shadow-2xs">
-                  <img src={qrDataUrl} alt="Receipt Verification QR" className="w-32 h-32 mx-auto" />
+                <div className="inline-block p-1 bg-white border border-slate-300 rounded-sm">
+                  <img
+                    src={qrDataUrl}
+                    alt="Receipt Verification QR"
+                    className="w-28 h-28 mx-auto object-contain filter contrast-150"
+                  />
                 </div>
               )}
-              <p className="text-[11px] font-semibold text-slate-700 mt-2">Scan to verify receipt</p>
-              <p className="text-[10px] text-slate-400 truncate max-w-xs mx-auto mt-0.5">
-                {receipt.verification_token.slice(0, 16)}...
+              <p className="text-[10px] font-bold text-slate-900 mt-1 uppercase tracking-wider">
+                Scan QR to Verify Receipt
               </p>
-              
-              <div className="mt-4 pt-3 border-t border-dotted border-slate-200 text-[11px] text-slate-500 flex flex-col items-center justify-center text-center">
-                <p>{business?.receipt_footer || 'Thank you for your business.'}</p>
-                <div className="flex items-center gap-1.5 mt-2">
-                  <img
-                    src="/src/assets/images/apple-touch-icon.png"
-                    alt="Logo"
-                    className="w-4 h-4 rounded object-cover shadow-2xs"
-                  />
-                  <span className="font-bold text-slate-800 text-xs">BRISK SMART BILLING</span>
-                </div>
-                <p className="text-[10px] text-slate-400 mt-0.5">Smart Billing. Pay. Verify. Grow.</p>
+              <p className="text-[9px] text-slate-500 font-mono truncate max-w-[200px] mx-auto">
+                Token: {receipt.verification_token.slice(0, 16)}...
+              </p>
+
+              {/* FOOTER NOTICE */}
+              <div className="mt-3 pt-2 border-t border-dotted border-slate-400 text-[10px] text-slate-600">
+                <p className="font-sans font-medium">
+                  {business?.receipt_footer || 'Thank you for your business. Karibu Tena!'}
+                </p>
+                <p className="text-[9px] text-slate-500 font-mono mt-1">
+                  BRISK SMART BILLING · POS TERMINAL
+                </p>
               </div>
             </div>
+
+            {/* Bottom Paper Perforation Line (Visual Screen Only) */}
+            <div className="no-print h-1.5 receipt-paper-edge -mb-5 -mx-5 mt-4 opacity-30 transform rotate-180" />
 
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="p-4 bg-slate-50 border-t border-slate-100 flex flex-wrap gap-2 justify-between items-center">
-          <div className="flex gap-2">
+        {/* Modal Bottom Action Controls (Screen Only) */}
+        <div className="no-print p-4 bg-white border-t border-slate-100 flex flex-wrap items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={handlePrint}
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 active:scale-98 rounded-lg shadow-sm transition-all cursor-pointer"
             >
               <Printer className="w-4 h-4" />
-              <span>Print</span>
+              <span>Print Thermal Receipt</span>
             </button>
             <button
+              type="button"
               onClick={handleCopyLink}
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 active:scale-98 rounded-lg transition-colors cursor-pointer"
             >
-              {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-              <span>{copied ? 'Copied!' : 'Copy Link'}</span>
+              {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-slate-500" />}
+              <span>{copied ? 'Link Copied' : 'Copy Link'}</span>
             </button>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <a
               href={verifyUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 px-3 py-2 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+              className="inline-flex items-center gap-1 px-3 py-2 text-xs font-semibold text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
             >
               <ShieldCheck className="w-4 h-4" />
               <span>Verify Portal</span>
             </a>
             <button
+              type="button"
               onClick={handleShare}
               className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors cursor-pointer"
             >
