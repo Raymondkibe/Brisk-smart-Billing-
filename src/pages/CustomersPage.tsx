@@ -7,7 +7,8 @@ import {
   ShoppingBag,
   Plus
 } from 'lucide-react';
-import { useAuth, apiFetch } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 import { Customer } from '../types';
 
 export const CustomersPage: React.FC = () => {
@@ -30,8 +31,8 @@ export const CustomersPage: React.FC = () => {
   const loadCustomers = async () => {
     try {
       setLoading(true);
-      const res = await apiFetch('/api/customers');
-      if (res.ok) setCustomers(await res.json());
+      const data = await api.customers.getCustomers();
+      setCustomers(data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -43,18 +44,13 @@ export const CustomersPage: React.FC = () => {
     e.preventDefault();
     if (!phone) return;
     try {
-      const res = await apiFetch('/api/customers', {
-        method: 'POST',
-        body: JSON.stringify({ name, phone, email, notes }),
-      });
-      if (res.ok) {
-        setModalOpen(false);
-        setName('');
-        setPhone('');
-        setEmail('');
-        setNotes('');
-        loadCustomers();
-      }
+      await api.customers.createCustomer({ name: name || 'Valued Customer', phone, email, notes });
+      setModalOpen(false);
+      setName('');
+      setPhone('');
+      setEmail('');
+      setNotes('');
+      loadCustomers();
     } catch (err) {
       console.error(err);
     }

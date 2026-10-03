@@ -108,6 +108,10 @@ apiRouter.post('/auth/register-business', (req: Request, res: Response) => {
     const now = new Date().toISOString();
     const trialEnd = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
 
+    // Check if this is the first registered business user on the platform to assign Super Admin status
+    const existingRealUsers = db.getProfiles().filter(p => p.id !== 'user_admin_001' && !p.id.startsWith('user_demo_'));
+    const isFirstRegisteredAdmin = existingRealUsers.length === 0 || !db.getProfiles().some(p => p.is_super_admin && p.id !== 'user_admin_001');
+
     // Check existing email or phone
     let user = db.getProfileByEmail(finalEmail) || db.getProfileByPhone(finalPhone);
     if (!user) {
@@ -118,6 +122,7 @@ apiRouter.post('/auth/register-business', (req: Request, res: Response) => {
         full_name: finalOwnerName,
         password,
         password_hash: hashString(password),
+        is_super_admin: isFirstRegisteredAdmin,
         email_verified: false,
         created_at: now,
         updated_at: now,
@@ -127,6 +132,9 @@ apiRouter.post('/auth/register-business', (req: Request, res: Response) => {
       user.full_name = finalOwnerName || user.full_name;
       user.password = password;
       user.password_hash = hashString(password);
+      if (isFirstRegisteredAdmin) {
+        user.is_super_admin = true;
+      }
       db.persist();
     }
 

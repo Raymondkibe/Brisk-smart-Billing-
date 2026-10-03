@@ -16,7 +16,8 @@ import {
   BarChart3,
   Calendar
 } from 'lucide-react';
-import { useAuth, apiFetch } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 import { Sale, Receipt } from '../types';
 import { ThermalReceiptModal } from '../components/ThermalReceiptModal';
 
@@ -39,16 +40,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   const loadDashboard = async () => {
     try {
       setLoading(true);
-      const [reportsRes, salesRes] = await Promise.all([
-        apiFetch('/api/reports/summary'),
-        apiFetch('/api/sales'),
+      const [summaryData, salesData] = await Promise.all([
+        api.reports.getSummary(),
+        api.sales.getSales({ limit: 10 }),
       ]);
 
-      if (reportsRes.ok) setMetrics(await reportsRes.json());
-      if (salesRes.ok) {
-        const sales: Sale[] = await salesRes.json();
-        setRecentSales(sales.slice(0, 7));
-      }
+      setMetrics(summaryData);
+      setRecentSales((salesData || []).slice(0, 7));
     } catch (err) {
       console.error('Failed to load dashboard:', err);
     } finally {
@@ -58,12 +56,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
 
   const handleViewReceipt = async (saleId: string) => {
     try {
-      const res = await apiFetch('/api/receipts');
-      if (res.ok) {
-        const receipts: Receipt[] = await res.json();
-        const r = receipts.find(item => item.sale_id === saleId);
-        if (r) setSelectedReceipt(r);
-      }
+      const receipts = await api.receipts.getReceipts();
+      const r = receipts.find(item => item.sale_id === saleId);
+      if (r) setSelectedReceipt(r);
     } catch (err) {
       console.error(err);
     }

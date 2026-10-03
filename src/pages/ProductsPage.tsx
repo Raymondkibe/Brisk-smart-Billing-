@@ -25,7 +25,8 @@ import {
   Box,
   ChevronDown
 } from 'lucide-react';
-import { useAuth, apiFetch } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import { api, axiosInstance } from '../services/api';
 import { Product, Category, Brand, ProductVatType } from '../types';
 
 export const ProductsPage: React.FC = () => {
@@ -111,14 +112,14 @@ export const ProductsPage: React.FC = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [prodRes, catRes, brdRes] = await Promise.all([
-        apiFetch('/api/products'),
-        apiFetch('/api/categories'),
-        apiFetch('/api/brands'),
+      const [prodData, catData, brdData] = await Promise.all([
+        api.products.getProducts(),
+        api.products.getCategories(),
+        api.products.getBrands(),
       ]);
-      if (prodRes.ok) setProducts(await prodRes.json());
-      if (catRes.ok) setCategories(await catRes.json());
-      if (brdRes.ok) setBrands(await brdRes.json());
+      if (prodData) setProducts(prodData);
+      if (catData) setCategories(catData);
+      if (brdData) setBrands(brdData);
     } catch (err) {
       console.error('Failed to load products data:', err);
     } finally {
@@ -203,12 +204,8 @@ export const ProductsPage: React.FC = () => {
         } else {
           // Auto-create brand
           try {
-            const bRes = await apiFetch('/api/brands', {
-              method: 'POST',
-              body: JSON.stringify({ name: resolvedBrandName }),
-            });
-            if (bRes.ok) {
-              const newBrand = await bRes.json();
+            const newBrand = await api.products.createBrand(resolvedBrandName);
+            if (newBrand) {
               resolvedBrandId = newBrand.id;
               resolvedBrandName = newBrand.name;
               setBrands(prev => [...prev, newBrand]);
@@ -230,12 +227,8 @@ export const ProductsPage: React.FC = () => {
         } else {
           // Auto-create category
           try {
-            const cRes = await apiFetch('/api/categories', {
-              method: 'POST',
-              body: JSON.stringify({ name: resolvedCategoryName }),
-            });
-            if (cRes.ok) {
-              const newCat = await cRes.json();
+            const newCat = await api.products.createCategory(resolvedCategoryName);
+            if (newCat) {
               resolvedCategoryId = newCat.id;
               resolvedCategoryName = newCat.name;
               setCategories(prev => [...prev, newCat]);
@@ -272,24 +265,10 @@ export const ProductsPage: React.FC = () => {
       };
 
       if (editingProduct) {
-        const res = await apiFetch(`/api/products/${editingProduct.id}`, {
-          method: 'PUT',
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.error || 'Failed to update product.');
-        }
+        await api.products.updateProduct(editingProduct.id, payload as any);
         showToast(`Updated product "${name}" successfully.`);
       } else {
-        const res = await apiFetch('/api/products', {
-          method: 'POST',
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.error || 'Failed to create product.');
-        }
+        await api.products.createProduct(payload as any);
         showToast(`Product "${name}" added to catalog.`);
       }
 
@@ -306,17 +285,12 @@ export const ProductsPage: React.FC = () => {
   const handleToggleActive = async (p: Product) => {
     try {
       const newStatus = p.active === false ? true : false;
-      const res = await apiFetch(`/api/products/${p.id}`, {
-        method: 'PUT',
-        body: JSON.stringify({ active: newStatus }),
-      });
-      if (res.ok) {
-        showToast(newStatus ? `Activated "${p.name}"` : `Deactivated "${p.name}"`);
-        if (detailsProduct?.id === p.id) {
-          setDetailsProduct({ ...detailsProduct, active: newStatus });
-        }
-        loadData();
+      await api.products.updateProduct(p.id, { active: newStatus });
+      showToast(newStatus ? `Activated "${p.name}"` : `Deactivated "${p.name}"`);
+      if (detailsProduct?.id === p.id) {
+        setDetailsProduct({ ...detailsProduct, active: newStatus });
       }
+      loadData();
     } catch (err: any) {
       console.error(err);
     }
@@ -326,12 +300,10 @@ export const ProductsPage: React.FC = () => {
   const handleDeleteProduct = async (id: string, prodName: string) => {
     if (confirm(`Are you sure you want to permanently delete "${prodName}"?`)) {
       try {
-        const res = await apiFetch(`/api/products/${id}`, { method: 'DELETE' });
-        if (res.ok) {
-          showToast(`Deleted "${prodName}".`);
-          if (detailsProduct?.id === id) setDetailsProduct(null);
-          loadData();
-        }
+        await api.products.deleteProduct(id);
+        showToast(`Deleted "${prodName}".`);
+        if (detailsProduct?.id === id) setDetailsProduct(null);
+        loadData();
       } catch (err: any) {
         console.error(err);
       }
@@ -343,12 +315,8 @@ export const ProductsPage: React.FC = () => {
     e.preventDefault();
     if (!newCategoryName.trim()) return;
     try {
-      const res = await apiFetch('/api/categories', {
-        method: 'POST',
-        body: JSON.stringify({ name: newCategoryName.trim() }),
-      });
-      if (res.ok) {
-        const newCat: Category = await res.json();
+      const newCat: Category = await api.products.createCategory(newCategoryName.trim());
+      if (newCat) {
         setCategories(prev => [...prev, newCat]);
         setCategoryId(newCat.id);
         setCategoryName(newCat.name);
@@ -366,12 +334,8 @@ export const ProductsPage: React.FC = () => {
     e.preventDefault();
     if (!newBrandName.trim()) return;
     try {
-      const res = await apiFetch('/api/brands', {
-        method: 'POST',
-        body: JSON.stringify({ name: newBrandName.trim() }),
-      });
-      if (res.ok) {
-        const newBrand: Brand = await res.json();
+      const newBrand: Brand = await api.products.createBrand(newBrandName.trim());
+      if (newBrand) {
         setBrands(prev => [...prev, newBrand]);
         setBrandId(newBrand.id);
         setBrandName(newBrand.name);
@@ -394,21 +358,16 @@ export const ProductsPage: React.FC = () => {
     try {
       setAdjustingStock(true);
       const effectiveDelta = stockAdjustmentType === 'damage' ? -Math.abs(delta) : Math.abs(delta);
-      const res = await apiFetch('/api/inventory/adjust', {
-        method: 'POST',
-        body: JSON.stringify({
-          productId: stockModalProduct.id,
-          quantityDelta: effectiveDelta,
-          type: stockAdjustmentType,
-          reason: stockAdjustmentReason,
-        }),
+      await api.inventory.adjustStock({
+        product_id: stockModalProduct.id,
+        quantity: effectiveDelta,
+        type: stockAdjustmentType,
+        reason: stockAdjustmentReason,
       });
 
-      if (res.ok) {
-        showToast(`Stock updated for "${stockModalProduct.name}".`);
-        setStockModalProduct(null);
-        await loadData();
-      }
+      showToast(`Stock updated for "${stockModalProduct.name}".`);
+      setStockModalProduct(null);
+      await loadData();
     } catch (err: any) {
       alert(`Adjustment error: ${err.message}`);
     } finally {
@@ -421,13 +380,9 @@ export const ProductsPage: React.FC = () => {
     if (!aiPrompt.trim()) return;
     try {
       setAiExtracting(true);
-      const res = await apiFetch('/api/ai/parse-products', {
-        method: 'POST',
-        body: JSON.stringify({ text: aiPrompt.trim() }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setAiDetectedProducts(data.products || []);
+      const data = await api.products.parseProductsWithAi(aiPrompt.trim());
+      if (data?.products) {
+        setAiDetectedProducts(data.products as any);
         setAiStep('review');
       } else {
         alert('Could not parse products. Please verify your prompt.');
@@ -445,33 +400,30 @@ export const ProductsPage: React.FC = () => {
     try {
       setAiCommitting(true);
       for (const item of aiDetectedProducts) {
-        await apiFetch('/api/products', {
-          method: 'POST',
-          body: JSON.stringify({
-            name: item.name,
-            brandName: item.brand,
-            categoryName: item.category || 'General',
-            variant: item.variant,
-            size: item.size,
-            unit: item.unit || 'piece',
-            unitSize: item.unit_size,
-            sellingPrice: Number(item.selling_price || 0),
-            buyingPrice: Number(item.buying_price || 0),
-            stockQuantity: Number(item.stock_quantity || 50),
-            lowStockThreshold: 10,
-            vatType: 'default',
-            fractionalQuantityAllowed: Boolean(item.fractional_quantity_allowed),
-            active: true,
-          }),
+        await api.products.createProduct({
+          name: item.name,
+          brand_name: item.brand,
+          category_name: item.category || 'General',
+          variant: item.variant,
+          size: item.size,
+          unit: item.unit || 'piece',
+          unit_size: item.unit_size,
+          selling_price: Number(item.selling_price || 0),
+          buying_price: Number(item.buying_price || 0),
+          stock_quantity: Number(item.stock_quantity || 50),
+          low_stock_threshold: 10,
+          vat_type: 'default',
+          fractional_quantity_allowed: Boolean(item.fractional_quantity_allowed),
+          active: true,
         });
       }
       showToast(`Successfully added ${aiDetectedProducts.length} products to your catalog!`);
       setAiModalOpen(false);
       setAiStep('input');
-      setAiDetectedProducts([]);
+      setAiPrompt('');
       await loadData();
     } catch (err: any) {
-      alert(`Error saving products: ${err.message}`);
+      alert(`Commit error: ${err.message}`);
     } finally {
       setAiCommitting(false);
     }

@@ -21,7 +21,8 @@ import {
   Eye,
   Check
 } from 'lucide-react';
-import { useAuth, apiFetch } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 import { SubscriptionPlan, AuditLog, ContactMessage, ContactMessageStatus } from '../types';
 
 export const AdminDashboardPage: React.FC = () => {
@@ -53,17 +54,17 @@ export const AdminDashboardPage: React.FC = () => {
     try {
       setLoading(true);
       const [metRes, bizRes, planRes, logRes, msgRes] = await Promise.all([
-        apiFetch('/api/admin/metrics'),
-        apiFetch('/api/admin/businesses'),
-        apiFetch('/api/admin/plans'),
-        apiFetch('/api/admin/logs'),
-        apiFetch('/api/admin/contact-messages'),
+        api.admin.getMetrics(),
+        api.admin.getBusinesses(),
+        api.admin.getPlans(),
+        api.support.getAuditLogs(),
+        api.admin.getContactMessages(),
       ]);
-      if (metRes.ok) setMetrics(await metRes.json());
-      if (bizRes.ok) setBusinesses(await bizRes.json());
-      if (planRes.ok) setPlans(await planRes.json());
-      if (logRes.ok) setLogs(await logRes.json());
-      if (msgRes.ok) setContactMessages(await msgRes.json());
+      setMetrics(metRes);
+      setBusinesses(bizRes || []);
+      setPlans(planRes || []);
+      setLogs(logRes || []);
+      setContactMessages(msgRes || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -73,17 +74,11 @@ export const AdminDashboardPage: React.FC = () => {
 
   const handleUpdateMessageStatus = async (id: string, status: ContactMessageStatus, replyNotes?: string) => {
     try {
-      const res = await apiFetch(`/api/admin/contact-messages/${id}/status`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, replyNotes }),
-      });
-      if (res.ok) {
-        showToast(`Message marked as ${status}.`);
-        loadAdminData();
-        if (selectedMessage && selectedMessage.id === id) {
-          setSelectedMessage((prev: ContactMessage | null) => prev ? { ...prev, status, reply_notes: replyNotes } : null);
-        }
+      await api.admin.updateContactMessageStatus(id, status);
+      showToast(`Message marked as ${status}.`);
+      loadAdminData();
+      if (selectedMessage && selectedMessage.id === id) {
+        setSelectedMessage((prev: ContactMessage | null) => prev ? { ...prev, status, reply_notes: replyNotes } : null);
       }
     } catch (err) {
       console.error('Failed to update message status:', err);
@@ -93,14 +88,10 @@ export const AdminDashboardPage: React.FC = () => {
   const handleDeleteMessage = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this contact message record?')) return;
     try {
-      const res = await apiFetch(`/api/admin/contact-messages/${id}`, {
-        method: 'DELETE',
-      });
-      if (res.ok) {
-        showToast('Contact message deleted.');
-        if (selectedMessage && selectedMessage.id === id) setSelectedMessage(null);
-        loadAdminData();
-      }
+      await api.admin.deleteContactMessage(id);
+      showToast('Contact message deleted.');
+      if (selectedMessage && selectedMessage.id === id) setSelectedMessage(null);
+      loadAdminData();
     } catch (err) {
       console.error('Failed to delete contact message:', err);
     }
@@ -108,10 +99,7 @@ export const AdminDashboardPage: React.FC = () => {
 
   const handleToggleBusiness = async (bizId: string, currentStatus: string) => {
     const nextStatus = currentStatus === 'active' ? 'suspended' : 'active';
-    await apiFetch(`/api/admin/businesses/${bizId}/status`, {
-      method: 'PUT',
-      body: JSON.stringify({ status: nextStatus }),
-    });
+    await api.admin.updateBusinessStatus(bizId, nextStatus);
     loadAdminData();
   };
 

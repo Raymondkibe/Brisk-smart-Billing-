@@ -74,13 +74,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onSuccess }) =
       setSuccessMessage(`Welcome back, ${res.user?.full_name || 'User'}! Redirecting...`);
 
       setTimeout(() => {
-        const dest = res.defaultPath || '/dashboard';
+        const dest = res.targetPath || res.defaultPath || '/dashboard';
         if (onSuccess) {
           onSuccess(dest);
         } else {
           onNavigate(dest);
         }
-      }, 400);
+      }, 350);
     } catch (err: any) {
       setError(err.message || 'Login failed. Please try again.');
     } finally {

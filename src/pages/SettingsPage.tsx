@@ -17,7 +17,8 @@ import {
   Info,
   CreditCard
 } from 'lucide-react';
-import { useAuth, apiFetch } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 import { Business, MpesaConfig, SmsConfig, CustomerNotification } from '../types';
 
 export const SettingsPage: React.FC = () => {
@@ -83,8 +84,7 @@ export const SettingsPage: React.FC = () => {
     }
 
     // Load M-Pesa configuration
-    apiFetch('/api/settings/mpesa')
-      .then(r => r.json())
+    api.settings.getMpesaSettings()
       .then(cfg => {
         setMpesaConfig(cfg);
         if (cfg) {
@@ -95,8 +95,7 @@ export const SettingsPage: React.FC = () => {
       .catch(console.error);
 
     // Load SMS configuration & notification logs
-    apiFetch('/api/settings/sms')
-      .then(r => r.json())
+    api.settings.getSmsSettings()
       .then(cfg => {
         setSmsConfig(cfg);
         if (cfg) {
@@ -110,8 +109,7 @@ export const SettingsPage: React.FC = () => {
       })
       .catch(console.error);
 
-    apiFetch('/api/customer-notifications')
-      .then(r => r.json())
+    api.customers.getNotifications()
       .then(logs => setCustomerLogs(logs || []))
       .catch(console.error);
   }, [activeBusiness?.id]);
@@ -126,20 +124,16 @@ export const SettingsPage: React.FC = () => {
     e.preventDefault();
     try {
       setSaving(true);
-      const res = await apiFetch('/api/settings/business', {
-        method: 'PUT',
-        body: JSON.stringify({
-          name,
-          phone,
-          email,
-          location,
-          address,
-          receipt_footer: receiptFooter,
-        }),
+      const data = await api.settings.updateBusinessSettings({
+        name,
+        phone,
+        email,
+        location,
+        address,
+        receipt_footer: receiptFooter,
       });
-      if (res.ok) {
-        const updated = await res.json();
-        updateActiveBusiness(updated);
+      if (data?.business) {
+        updateActiveBusiness(data.business);
         showToast('Business details updated successfully!');
       }
     } catch (err: any) {
@@ -154,18 +148,14 @@ export const SettingsPage: React.FC = () => {
     e.preventDefault();
     try {
       setSaving(true);
-      const res = await apiFetch('/api/settings/business', {
-        method: 'PUT',
-        body: JSON.stringify({
-          vat_enabled: Boolean(vatEnabled),
-          vat_number: vatNumber.trim(),
-          tax_percentage: Number(taxPercentage || 0),
-          prices_include_vat: Boolean(pricesIncludeVat),
-        }),
+      const data = await api.settings.updateBusinessSettings({
+        vat_enabled: Boolean(vatEnabled),
+        vat_number: vatNumber.trim(),
+        tax_percentage: Number(taxPercentage || 0),
+        prices_include_vat: Boolean(pricesIncludeVat),
       });
-      if (res.ok) {
-        const updated = await res.json();
-        updateActiveBusiness(updated);
+      if (data?.business) {
+        updateActiveBusiness(data.business);
         showToast('Tax and VAT configuration updated successfully! New transactions will use these rules.');
       }
     } catch (err: any) {
@@ -180,24 +170,20 @@ export const SettingsPage: React.FC = () => {
     e.preventDefault();
     try {
       setSaving(true);
-      const res = await apiFetch('/api/settings/sms', {
-        method: 'PUT',
-        body: JSON.stringify({
-          provider: smsProvider,
-          sender_id: senderId.trim(),
-          api_key: smsApiKey || undefined,
-          username: smsUsername || undefined,
-          account_sid: smsAccountSid || undefined,
-          auth_token: smsAuthToken || undefined,
-          enabled: smsEnabled,
-          notify_payment_success: notifyPaymentSuccess,
-          notify_receipt_ready: notifyReceiptReady,
-          notify_refund: notifyRefund,
-        }),
+      const data = await api.settings.updateSmsSettings({
+        provider: smsProvider,
+        sender_id: senderId.trim(),
+        api_key: smsApiKey || undefined,
+        username: smsUsername || undefined,
+        account_sid: smsAccountSid || undefined,
+        auth_token: smsAuthToken || undefined,
+        enabled: smsEnabled,
+        notify_payment_success: notifyPaymentSuccess,
+        notify_receipt_ready: notifyReceiptReady,
+        notify_refund: notifyRefund,
       });
-      if (res.ok) {
-        const updated = await res.json();
-        setSmsConfig(updated);
+      if (data?.config) {
+        setSmsConfig(data.config);
         setSmsApiKey('');
         setSmsAuthToken('');
         showToast('SMS gateway and customer notification preferences saved!');
@@ -216,20 +202,13 @@ export const SettingsPage: React.FC = () => {
     try {
       setSendingTestSms(true);
       setTestSmsResult(null);
-      const res = await apiFetch('/api/settings/sms/test', {
-        method: 'POST',
-        body: JSON.stringify({ phone: testPhone }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setTestSmsResult(data.result);
+      const data = await api.settings.testSms(testPhone, 'BRISK SMART BILLING: Test transactional message.');
+      if (data?.success) {
+        setTestSmsResult((data as any).result);
         showToast('Test transactional SMS dispatched!');
-        // Refresh logs
-        apiFetch('/api/customer-notifications')
-          .then(r => r.json())
-          .then(logs => setCustomerLogs(logs || []));
+        api.customers.getNotifications().then(logs => setCustomerLogs(logs || []));
       } else {
-        alert(data.error || 'Failed to dispatch test SMS');
+        alert(data?.message || 'Failed to dispatch test SMS');
       }
     } catch (err: any) {
       alert(`Error: ${err.message}`);
@@ -243,19 +222,15 @@ export const SettingsPage: React.FC = () => {
     e.preventDefault();
     try {
       setSaving(true);
-      const res = await apiFetch('/api/settings/mpesa', {
-        method: 'PUT',
-        body: JSON.stringify({
-          environment: mpesaEnv,
-          shortcode,
-          consumerKey: consumerKey || undefined,
-          passkey: passkey || undefined,
-          active: true,
-        }),
+      const data = await api.settings.updateMpesaSettings({
+        environment: mpesaEnv,
+        shortcode,
+        consumerKey: consumerKey || undefined,
+        passkey: passkey || undefined,
+        active: true,
       });
-      if (res.ok) {
-        const updated = await res.json();
-        setMpesaConfig(updated);
+      if (data?.config) {
+        setMpesaConfig(data.config);
         setConsumerKey('');
         setConsumerSecret('');
         setPasskey('');

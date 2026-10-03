@@ -9,7 +9,8 @@ import {
   Filter,
   Download
 } from 'lucide-react';
-import { useAuth, apiFetch } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 import { Sale, Receipt } from '../types';
 import { ThermalReceiptModal } from '../components/ThermalReceiptModal';
 
@@ -29,8 +30,8 @@ export const TransactionsPage: React.FC = () => {
   const loadTransactions = async () => {
     try {
       setLoading(true);
-      const res = await apiFetch('/api/sales');
-      if (res.ok) setSales(await res.json());
+      const data = await api.sales.getSales();
+      setSales(data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -40,12 +41,9 @@ export const TransactionsPage: React.FC = () => {
 
   const handleOpenReceipt = async (saleId: string) => {
     try {
-      const res = await apiFetch('/api/receipts');
-      if (res.ok) {
-        const receipts: Receipt[] = await res.json();
-        const r = receipts.find(item => item.sale_id === saleId);
-        if (r) setSelectedReceipt(r);
-      }
+      const receipts = await api.receipts.getReceipts();
+      const r = receipts.find(item => item.sale_id === saleId);
+      if (r) setSelectedReceipt(r);
     } catch (err) {
       console.error(err);
     }

@@ -23,7 +23,8 @@ import {
   ShieldCheck,
   ChevronRight
 } from 'lucide-react';
-import { useAuth, apiFetch } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 import { Sale } from '../types';
 
 interface WorkerDashboardPageProps {
@@ -42,12 +43,12 @@ export const WorkerDashboardPage: React.FC<WorkerDashboardPageProps> = ({ onNavi
     expiredPaymentsCount?: number;
     recentTransactions: Sale[];
   }>({
-    todaySalesTotal: 8450,
-    todayTransactionsCount: 37,
-    successfulPaymentsTotal: 6800,
-    pendingPaymentsCount: 2,
-    cancelledPaymentsCount: 3,
-    failedPaymentsCount: 1,
+    todaySalesTotal: 0,
+    todayTransactionsCount: 0,
+    successfulPaymentsTotal: 0,
+    pendingPaymentsCount: 0,
+    cancelledPaymentsCount: 0,
+    failedPaymentsCount: 0,
     expiredPaymentsCount: 0,
     recentTransactions: [],
   });
@@ -62,9 +63,8 @@ export const WorkerDashboardPage: React.FC<WorkerDashboardPageProps> = ({ onNavi
 
   const loadStats = async () => {
     try {
-      const res = await apiFetch('/api/worker/stats');
-      if (res.ok) {
-        const data = await res.json();
+      const data: any = await api.workers.getWorkerStats();
+      if (data) {
         setStats(data);
       }
     } catch (err) {

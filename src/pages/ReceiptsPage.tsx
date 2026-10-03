@@ -7,7 +7,8 @@ import {
   ExternalLink,
   Eye
 } from 'lucide-react';
-import { useAuth, apiFetch } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 import { Receipt } from '../types';
 import { ThermalReceiptModal } from '../components/ThermalReceiptModal';
 
@@ -25,8 +26,8 @@ export const ReceiptsPage: React.FC = () => {
   const loadReceipts = async () => {
     try {
       setLoading(true);
-      const res = await apiFetch('/api/receipts');
-      if (res.ok) setReceipts(await res.json());
+      const data = await api.receipts.getReceipts();
+      setReceipts(data || []);
     } catch (err) {
       console.error(err);
     } finally {

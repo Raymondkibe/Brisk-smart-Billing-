@@ -6,7 +6,8 @@ import {
   Tag,
   DollarSign
 } from 'lucide-react';
-import { useAuth, apiFetch } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 import { Expense } from '../types';
 
 export const ExpensesPage: React.FC = () => {
@@ -28,8 +29,8 @@ export const ExpensesPage: React.FC = () => {
   const loadExpenses = async () => {
     try {
       setLoading(true);
-      const res = await apiFetch('/api/expenses');
-      if (res.ok) setExpenses(await res.json());
+      const data = await api.expenses.getExpenses();
+      setExpenses(data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -42,16 +43,16 @@ export const ExpensesPage: React.FC = () => {
     if (!description || !amount) return;
 
     try {
-      const res = await apiFetch('/api/expenses', {
-        method: 'POST',
-        body: JSON.stringify({ category, description, amount, expenseDate }),
+      await api.expenses.createExpense({
+        category,
+        description,
+        amount: Number(amount),
+        payment_method: 'Cash',
       });
-      if (res.ok) {
-        setModalOpen(false);
-        setDescription('');
-        setAmount('');
-        loadExpenses();
-      }
+      setModalOpen(false);
+      setDescription('');
+      setAmount('');
+      loadExpenses();
     } catch (err) {
       console.error(err);
     }

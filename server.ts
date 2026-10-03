@@ -37,8 +37,10 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  app.listen(PORT, '0.0.0.0', async () => {
     console.log(`[BRISK BILLING] Server running on http://0.0.0.0:${PORT}`);
+    const { testSupabaseConnection } = await import('./server/supabase');
+    await testSupabaseConnection();
   });
 }
 

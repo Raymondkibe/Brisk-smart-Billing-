@@ -10,7 +10,8 @@ import {
   Layers,
   ShoppingBag
 } from 'lucide-react';
-import { useAuth, apiFetch } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 
 export const ReportsPage: React.FC = () => {
   const { activeBusiness } = useAuth();
@@ -25,12 +26,12 @@ export const ReportsPage: React.FC = () => {
   const loadReports = async () => {
     try {
       setLoading(true);
-      const [metricsRes, salesRes] = await Promise.all([
-        apiFetch('/api/reports/summary'),
-        apiFetch('/api/sales'),
+      const [summaryData, salesData] = await Promise.all([
+        api.reports.getSummary(),
+        api.sales.getSales(),
       ]);
-      if (metricsRes.ok) setMetrics(await metricsRes.json());
-      if (salesRes.ok) setSales(await salesRes.json());
+      setMetrics(summaryData);
+      setSales(salesData || []);
     } catch (err) {
       console.error(err);
     } finally {

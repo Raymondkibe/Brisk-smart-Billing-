@@ -9,7 +9,8 @@ import {
   AlertTriangle,
   ArrowRight
 } from 'lucide-react';
-import { useAuth, apiFetch } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 import { SubscriptionPlan } from '../types';
 
 export const SubscriptionPage: React.FC = () => {
@@ -31,8 +32,8 @@ export const SubscriptionPage: React.FC = () => {
   const loadPlans = async () => {
     try {
       setLoading(true);
-      const res = await apiFetch('/api/subscriptions/plans');
-      if (res.ok) setPlans(await res.json());
+      const data = await api.subscriptions.getPlans();
+      setPlans(data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -49,19 +50,15 @@ export const SubscriptionPage: React.FC = () => {
       setError(null);
       setMessage(null);
 
-      const res = await apiFetch('/api/subscriptions/activate', {
-        method: 'POST',
-        body: JSON.stringify({
-          planId: selectedPlan.id,
-          phone,
-        }),
+      const data = await api.subscriptions.activateSubscription({
+        plan_id: selectedPlan.id,
+        billing_cycle: 'monthly',
+        payment_method: 'mpesa',
+        phone,
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to activate subscription');
-
       confetti({ particleCount: 80, spread: 70 });
-      setMessage(data.message);
+      setMessage(data.message || 'Subscription activated successfully!');
       await refreshAuth();
       setTimeout(() => {
         setSelectedPlan(null);

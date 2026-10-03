@@ -15,7 +15,8 @@ import {
   ChevronRight,
   Filter
 } from 'lucide-react';
-import { useAuth, apiFetch } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 import { BankTransferRecord, Sale } from '../types';
 
 interface BankTransfersPageProps {
@@ -42,11 +43,10 @@ export const BankTransfersPage: React.FC<BankTransfersPageProps> = ({ onNavigate
   const loadTransfers = async () => {
     try {
       setLoading(true);
-      const res = await apiFetch(`/api/payments/bank-transfers?status=${filter}`);
-      if (res.ok) {
-        const data = await res.json();
-        setTransfers(data || []);
-      }
+      const data = await api.paymentSettings.getBankTransfers();
+      const list = data || [];
+      const filteredList = filter === 'all' ? list : list.filter(t => t.status === filter);
+      setTransfers(filteredList);
     } catch (err) {
       console.error('Failed to load bank transfers:', err);
       showToast('error', 'Failed to retrieve bank transfers queue.');
@@ -65,11 +65,7 @@ export const BankTransfersPage: React.FC<BankTransfersPageProps> = ({ onNavigate
     }
     try {
       setActionLoading(true);
-      const res = await apiFetch(`/api/payments/bank-transfers/${transferId}/verify`, {
-        method: 'POST',
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to verify transfer.');
+      await api.paymentSettings.verifyBankTransfer(transferId);
 
       showToast('success', 'Bank transfer marked as VERIFIED! Sale completed & inventory deducted.');
       setSelectedTransfer(null);
@@ -84,13 +80,10 @@ export const BankTransfersPage: React.FC<BankTransfersPageProps> = ({ onNavigate
   const handleReject = async (transferId: string) => {
     try {
       setActionLoading(true);
-      const res = await apiFetch(`/api/payments/bank-transfers/${transferId}/reject`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason: rejectReason || 'Deposit not reflected in business bank statement.' }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to reject transfer.');
+      await api.paymentSettings.rejectBankTransfer(
+        transferId,
+        rejectReason || 'Deposit not reflected in business bank statement.'
+      );
 
       showToast('success', 'Transfer marked as REJECTED. Sale was not completed.');
       setSelectedTransfer(null);

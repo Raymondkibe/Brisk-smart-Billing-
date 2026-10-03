@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { UserProfile, Business, BusinessMember, Subscription, UserRole } from '../types';
+
+const REDIRECT_STORAGE_KEY = 'brisk_auth_redirect_url';
 
 interface AuthContextType {
   user: UserProfile | null;
@@ -18,8 +20,25 @@ interface AuthContextType {
   refreshAuth: () => Promise<void>;
   updateActiveBusiness: (updated: Business) => void;
   getDefaultPath: (roleOverride?: string | null) => string;
-  login: (identifier: string, password?: string) => Promise<{ success: boolean; error?: string; user?: UserProfile; role?: string; defaultPath?: string }>;
-  registerBusiness: (payload: any) => Promise<{ success: boolean; error?: string; user?: UserProfile; business?: Business; role?: string; defaultPath?: string }>;
+  saveRedirectPath: (path: string) => void;
+  getAndClearRedirectPath: () => string | null;
+  login: (identifier: string, password?: string) => Promise<{
+    success: boolean;
+    error?: string;
+    user?: UserProfile;
+    role?: string;
+    defaultPath?: string;
+    targetPath?: string;
+  }>;
+  registerBusiness: (payload: any) => Promise<{
+    success: boolean;
+    error?: string;
+    user?: UserProfile;
+    business?: Business;
+    role?: string;
+    defaultPath?: string;
+    targetPath?: string;
+  }>;
   logout: () => void;
 }
 
@@ -56,12 +75,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isCashier = role === 'cashier' && !isOwner && !isSuperAdmin;
   const isSales = role === 'sales_worker' && !isOwner && !isSuperAdmin;
 
-  const getDefaultPath = (roleOverride?: string | null): string => {
+  const getDefaultPath = useCallback((roleOverride?: string | null): string => {
     const activeRole = roleOverride || role;
     if (activeRole === 'super_admin') return '/admin';
     if (activeRole === 'cashier' || activeRole === 'sales_worker') return '/sales/new';
     return '/dashboard';
-  };
+  }, [role]);
+
+  /**
+   * Save a requested destination URL during unauthenticated navigation attempt
+   */
+  const saveRedirectPath = useCallback((path: string) => {
+    if (!path || path === '/login' || path === '/' || path === '/register-business') {
+      return;
+    }
+    try {
+      sessionStorage.setItem(REDIRECT_STORAGE_KEY, path);
+    } catch {
+      // Ignore storage errors in restricted contexts
+    }
+  }, []);
+
+  /**
+   * Retrieve and clear the saved destination URL
+   */
+  const getAndClearRedirectPath = useCallback((): string | null => {
+    try {
+      const saved = sessionStorage.getItem(REDIRECT_STORAGE_KEY);
+      if (saved) {
+        sessionStorage.removeItem(REDIRECT_STORAGE_KEY);
+        if (saved !== '/login' && saved !== '/' && saved !== '/register-business') {
+          return saved;
+        }
+      }
+    } catch {
+      // Ignore storage errors
+    }
+    return null;
+  }, []);
 
   const fetchAuth = async (userIdOverride?: string, businessIdOverride?: string) => {
     try {
@@ -167,11 +218,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ? '/admin'
           : '/dashboard';
 
+      // Check if user had a previous requested path in session storage
+      const savedRedirect = getAndClearRedirectPath();
+      const targetPath = savedRedirect || defaultPath;
+
       return {
         success: true,
         user: data.user,
         role: dynamicRole,
         defaultPath,
+        targetPath,
       };
     } catch (err: any) {
       return { success: false, error: err.message };
@@ -204,12 +260,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data.user?.id) localStorage.setItem('brisk_user_id', data.user.id);
       if (activeBiz?.id) localStorage.setItem('brisk_biz_id', activeBiz.id);
 
+      const savedRedirect = getAndClearRedirectPath();
+      const targetPath = savedRedirect || '/dashboard';
+
       return {
         success: true,
         user: data.user,
         business: activeBiz,
         role: 'owner',
         defaultPath: '/dashboard',
+        targetPath,
       };
     } catch (err: any) {
       return { success: false, error: err.message };
@@ -221,6 +281,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     localStorage.removeItem('brisk_user_id');
     localStorage.removeItem('brisk_biz_id');
+    try {
+      sessionStorage.removeItem(REDIRECT_STORAGE_KEY);
+    } catch {
+      // Ignore storage error
+    }
     setUser(null);
     setBusinesses([]);
     setActiveBusiness(null);
@@ -247,6 +312,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         refreshAuth,
         updateActiveBusiness,
         getDefaultPath,
+        saveRedirectPath,
+        getAndClearRedirectPath,
         login,
         registerBusiness,
         logout,

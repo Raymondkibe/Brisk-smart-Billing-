@@ -13,7 +13,7 @@ import {
   ArrowRight,
   ExternalLink
 } from 'lucide-react';
-import { apiFetch } from '../context/AuthContext';
+import { api } from '../services/api';
 
 interface ContactPageProps {
   onNavigate?: (path: string) => void;
@@ -52,31 +52,18 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
 
     try {
       setSubmitting(true);
-      const res = await apiFetch('/api/public/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          businessName: formData.businessName.trim(),
-          business_name: formData.businessName.trim(),
-          email: formData.email.trim().toLowerCase(),
-          phone: formData.phone.trim(),
-          subject: formData.subject.trim(),
-          message: formData.message.trim(),
-          website_trap: formData.website_trap,
-          _form_loaded_at: formLoadedAt,
-        }),
+      const data = await api.support.submitContactMessage({
+        fullName: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(),
+        phone: formData.phone.trim(),
+        companyName: formData.businessName.trim(),
+        subject: formData.subject.trim(),
+        message: formData.message.trim(),
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to submit contact request.');
-      }
-
       setSuccessResult({
-        id: data.id,
-        message: data.message || 'Message Sent Successfully. Thank you for contacting BRISK SMART BILLING. Our team will get back to you.',
+        id: (data as any)?.id,
+        message: data?.message || 'Message Sent Successfully. Thank you for contacting BRISK SMART BILLING. Our team will get back to you.',
       });
 
       // Clear sensitive form fields

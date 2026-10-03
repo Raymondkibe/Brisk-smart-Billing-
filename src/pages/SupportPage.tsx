@@ -7,7 +7,8 @@ import {
   AlertCircle,
   MessageSquare
 } from 'lucide-react';
-import { useAuth, apiFetch } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 import { SupportTicket } from '../types';
 
 export const SupportPage: React.FC = () => {
@@ -29,8 +30,8 @@ export const SupportPage: React.FC = () => {
   const loadTickets = async () => {
     try {
       setLoading(true);
-      const res = await apiFetch('/api/support');
-      if (res.ok) setTickets(await res.json());
+      const data = await api.support.getTickets();
+      setTickets(data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -42,16 +43,16 @@ export const SupportPage: React.FC = () => {
     e.preventDefault();
     if (!subject || !description) return;
     try {
-      const res = await apiFetch('/api/support', {
-        method: 'POST',
-        body: JSON.stringify({ subject, category, priority, description }),
+      await api.support.createTicket({
+        subject,
+        message: description,
+        category,
+        priority,
       });
-      if (res.ok) {
-        setModalOpen(false);
-        setSubject('');
-        setDescription('');
-        loadTickets();
-      }
+      setModalOpen(false);
+      setSubject('');
+      setDescription('');
+      loadTickets();
     } catch (err) {
       console.error(err);
     }

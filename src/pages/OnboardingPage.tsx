@@ -10,7 +10,8 @@ import {
   ArrowLeft,
   Sparkles
 } from 'lucide-react';
-import { useAuth, apiFetch } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 
 interface OnboardingPageProps {
   onComplete: () => void;
@@ -40,29 +41,17 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onComplete }) =>
 
   const handleNext = async () => {
     if (step === 1) {
-      await apiFetch('/api/settings/business', {
-        method: 'PUT',
-        body: JSON.stringify({ phone: bizPhone, address: bizAddress }),
-      });
+      await api.settings.updateBusinessSettings({ phone: bizPhone, address: bizAddress });
     } else if (step === 3 && prodName && prodPrice) {
-      await apiFetch('/api/products', {
-        method: 'POST',
-        body: JSON.stringify({
-          name: prodName,
-          sellingPrice: Number(prodPrice),
-          stockQuantity: Number(prodStock),
-        }),
+      await api.products.createProduct({
+        name: prodName,
+        selling_price: Number(prodPrice),
+        stock_quantity: Number(prodStock),
       });
     } else if (step === 4) {
-      await apiFetch('/api/settings/mpesa', {
-        method: 'PUT',
-        body: JSON.stringify({ shortcode, environment: 'test' }),
-      });
+      await api.settings.updateMpesaSettings({ shortcode, environment: 'test', active: true });
     } else if (step === 5 && workerName && workerEmail) {
-      await apiFetch('/api/workers', {
-        method: 'POST',
-        body: JSON.stringify({ name: workerName, email: workerEmail, role: workerRole }),
-      });
+      await api.workers.createWorker({ fullName: workerName, email: workerEmail, role: workerRole });
     }
 
     if (step < 6) {

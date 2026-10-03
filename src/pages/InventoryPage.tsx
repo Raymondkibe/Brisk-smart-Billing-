@@ -9,7 +9,8 @@ import {
   CheckCircle2,
   Package
 } from 'lucide-react';
-import { useAuth, apiFetch } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 import { Product, InventoryMovement } from '../types';
 
 export const InventoryPage: React.FC = () => {
@@ -35,12 +36,12 @@ export const InventoryPage: React.FC = () => {
   const loadInventory = async () => {
     try {
       setLoading(true);
-      const [prodRes, movRes] = await Promise.all([
-        apiFetch('/api/products'),
-        apiFetch('/api/inventory/movements'),
+      const [prodData, movData] = await Promise.all([
+        api.products.getProducts(),
+        api.inventory.getMovements(),
       ]);
-      if (prodRes.ok) setProducts(await prodRes.json());
-      if (movRes.ok) setMovements(await movRes.json());
+      setProducts(prodData || []);
+      setMovements(movData || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -57,20 +58,15 @@ export const InventoryPage: React.FC = () => {
       let delta = Number(quantityDelta);
       if (adjustType === 'damaged' && delta > 0) delta = -delta;
 
-      const res = await apiFetch('/api/inventory/adjust', {
-        method: 'POST',
-        body: JSON.stringify({
-          productId: selectedProductId,
-          quantityDelta: delta,
-          type: adjustType,
-          reason,
-        }),
+      await api.inventory.adjustStock({
+        product_id: selectedProductId,
+        quantity: delta,
+        type: adjustType === 'damaged' ? 'damage' : adjustType === 'returned' ? 'return' : adjustType,
+        reason,
       });
 
-      if (res.ok) {
-        setAdjustModalOpen(false);
-        loadInventory();
-      }
+      setAdjustModalOpen(false);
+      loadInventory();
     } catch (err) {
       console.error(err);
     }

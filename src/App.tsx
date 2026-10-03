@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navigation } from './components/Navigation';
 import { SiteHeader } from './components/SiteHeader';
@@ -31,51 +31,91 @@ import { ContactPage } from './pages/ContactPage';
 import { PaymentSettingsPage } from './pages/PaymentSettingsPage';
 import { BankTransfersPage } from './pages/BankTransfersPage';
 
-function AppContent() {
-  const { user, loading, isOwner, isCashier, isSales, isSuperAdmin, getDefaultPath } = useAuth();
-  const [currentPath, setCurrentPath] = useState(window.location.pathname || '/dashboard');
-  const [isPageTransitioning, setIsPageTransitioning] = useState(false);
+/**
+ * Normalizes any route string by stripping query parameters, hashes, and trailing slashes.
+ */
+function normalizeRoute(rawPath: string): string {
+  if (!rawPath) return '/';
+  const withoutQueryOrHash = rawPath.split('?')[0].split('#')[0].trim();
+  const normalized = withoutQueryOrHash.replace(/\/+$/, '') || '/';
+  return normalized;
+}
 
-  // Sync route with browser history (back/forward buttons)
+/**
+ * Robust state-driven router hook for AI Studio SPA applications.
+ * Synchronizes route state with browser history (popstate & pushState) with zero reload.
+ */
+function useRouter() {
+  const [currentUrl, setCurrentUrl] = useState<string>(() => {
+    return window.location.pathname + window.location.search + window.location.hash || '/dashboard';
+  });
+  const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
+
+  const cleanPath = useMemo(() => normalizeRoute(currentUrl), [currentUrl]);
+
+  // Synchronize on browser Back / Forward events
   useEffect(() => {
     const handlePopState = () => {
-      const target = window.location.pathname || '/dashboard';
-      setCurrentPath(target);
-      setIsPageTransitioning(true);
-      const timer = setTimeout(() => setIsPageTransitioning(false), 200);
+      const fullUrl = window.location.pathname + window.location.search + window.location.hash || '/dashboard';
+      setCurrentUrl(fullUrl);
+      setIsTransitioning(true);
+      const timer = setTimeout(() => setIsTransitioning(false), 180);
       return () => clearTimeout(timer);
     };
+
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Universal SPA Navigation Handler: updates browser history without page reload
-  const navigate = useCallback((path: string) => {
-    if (path === currentPath) {
+  // State-driven navigate function
+  const navigate = useCallback((targetPath: string, options?: { replace?: boolean }) => {
+    if (!targetPath) return;
+
+    if (targetPath === currentUrl) {
       window.scrollTo(0, 0);
       return;
     }
 
-    // Update browser URL without reload
-    window.history.pushState({ path }, '', path);
-    
-    // Provide immediate visual skeleton feedback while loading target page & API data
-    setIsPageTransitioning(true);
-    setCurrentPath(path);
+    if (options?.replace) {
+      window.history.replaceState({ path: targetPath }, '', targetPath);
+    } else {
+      window.history.pushState({ path: targetPath }, '', targetPath);
+    }
+
+    setCurrentUrl(targetPath);
+    setIsTransitioning(true);
     window.scrollTo(0, 0);
 
-    // Smooth transition release after initial mount
     const timer = setTimeout(() => {
-      setIsPageTransitioning(false);
-    }, 220);
+      setIsTransitioning(false);
+    }, 180);
 
     return () => clearTimeout(timer);
-  }, [currentPath]);
+  }, [currentUrl]);
 
-  // Base path without query params or trailing slash for exact matching
-  const cleanPath = (currentPath.split('?')[0].split('#')[0] || '/').replace(/\/+$/, '') || '/';
+  return {
+    currentUrl,
+    cleanPath,
+    isTransitioning,
+    navigate,
+  };
+}
 
-  // Determine if current route is a public/standalone view
+function AppContent() {
+  const {
+    user,
+    loading,
+    isOwner,
+    isCashier,
+    isSales,
+    isSuperAdmin,
+    getDefaultPath,
+    saveRedirectPath,
+  } = useAuth();
+
+  const { currentUrl, cleanPath, isTransitioning, navigate } = useRouter();
+
+  // Determine if the current route is publicly accessible
   const isPublicRoute =
     cleanPath === '/' ||
     cleanPath === '/login' ||
@@ -85,9 +125,14 @@ function AppContent() {
     cleanPath.startsWith('/pay/') ||
     cleanPath.startsWith('/verify-receipt/');
 
-  // Clean authenticated navigation - users can freely navigate to all back-office pages without bouncing
+  // When an unauthenticated user attempts to visit a protected route, preserve their requested path in session storage
+  useEffect(() => {
+    if (!loading && !user && !isPublicRoute) {
+      saveRedirectPath(currentUrl);
+    }
+  }, [loading, user, isPublicRoute, currentUrl, saveRedirectPath]);
 
-  // Show a light loading indicator while authenticating session on initial load
+  // Show a clean, branded loading spinner while authenticating initial session
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -96,14 +141,12 @@ function AppContent() {
     );
   }
 
-  // Public Routes (Landing, Login, Register, Pay, Receipt verification)
+  // 1. Render Public & Standalone Pages
   if (isPublicRoute) {
     return (
       <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-between selection:bg-blue-600 selection:text-white font-sans">
-        {/* Global Public Website Header */}
-        <SiteHeader currentPath={currentPath} onNavigate={navigate} />
+        <SiteHeader currentPath={cleanPath} onNavigate={navigate} />
 
-        {/* Dynamic Page Content */}
         <div className="flex-1 flex flex-col">
           {cleanPath === '/' && (
             <LandingPage onNavigate={navigate} />
@@ -142,13 +185,12 @@ function AppContent() {
           )}
         </div>
 
-        {/* Global Public Website Footer */}
         <SiteFooter variant="public" onNavigate={navigate} />
       </div>
     );
   }
 
-  // If user is unauthenticated and attempting to visit a private route, show the unified login form
+  // 2. Unauthenticated user trying to access a protected back-office page
   if (!user) {
     return (
       <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-between selection:bg-blue-600 selection:text-white font-sans">
@@ -157,11 +199,7 @@ function AppContent() {
           <LoginPage
             onNavigate={navigate}
             onSuccess={(targetPath) => {
-              if (currentPath && currentPath !== '/login' && currentPath !== '/') {
-                navigate(currentPath);
-              } else {
-                navigate(targetPath || getDefaultPath());
-              }
+              navigate(targetPath || getDefaultPath());
             }}
           />
         </div>
@@ -170,10 +208,10 @@ function AppContent() {
     );
   }
 
-  // Helper to render the active authenticated page with skeleton loading fallback
+  // 3. Authenticated Router: Maps every navigation route directly to its corresponding page component
   const renderAuthenticatedPage = () => {
-    // If page is transitioning, show contextual skeleton loader immediately
-    if (isPageTransitioning) {
+    // If transitioning, render instantaneous contextual skeleton feedback
+    if (isTransitioning) {
       switch (cleanPath) {
         case '/worker/dashboard':
         case '/dashboard':
@@ -220,6 +258,7 @@ function AppContent() {
 
         case '/payments/bank-transfers':
         case '/bank-transfers':
+        case '/settings/bank-transfers':
           return <PageSkeleton pageTitle="Bank Transfer Approvals" variant="table" />;
 
         case '/support':
@@ -236,7 +275,7 @@ function AppContent() {
       }
     }
 
-    // Normal Page View Rendering
+    // Explicit and deterministic route matching
     switch (cleanPath) {
       case '/worker/dashboard':
         return <WorkerDashboardPage onNavigate={navigate} />;
@@ -288,6 +327,7 @@ function AppContent() {
 
       case '/payments/bank-transfers':
       case '/bank-transfers':
+      case '/settings/bank-transfers':
         return <BankTransfersPage onNavigate={navigate} />;
 
       case '/support':
@@ -296,16 +336,21 @@ function AppContent() {
       case '/admin':
         return <AdminDashboardPage />;
 
+      // Settings and child settings views
+      case '/settings':
+      case '/settings/business':
+      case '/settings/tax':
+      case '/settings/sms':
+      case '/settings/mpesa':
+        return <SettingsPage />;
+
       default:
-        // Handle nested settings routes (e.g. /settings/business, /settings/mpesa, /settings/sms, /settings)
-        if (cleanPath === '/settings' || cleanPath.startsWith('/settings/')) {
-          if (cleanPath === '/settings/payments') {
-            return <PaymentSettingsPage onNavigate={navigate} />;
-          }
+        // Handle any dynamic nested settings routes
+        if (cleanPath.startsWith('/settings/')) {
           return <SettingsPage />;
         }
 
-        // Default fallback to Dashboard
+        // Fallback for role-specific dashboard
         if ((isCashier || isSales) && !isOwner && !isSuperAdmin) {
           return <WorkerDashboardPage onNavigate={navigate} />;
         }
@@ -313,19 +358,16 @@ function AppContent() {
     }
   };
 
-  // Authenticated Back-Office Application Layout
+  // 4. Authenticated Layout with Responsive Navigation
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-between pb-16 md:pb-0 selection:bg-blue-600 selection:text-white font-sans">
-      {/* Top Bar Header & Responsive Navigation */}
-      <Navigation currentPath={currentPath} onNavigate={navigate} />
+      <Navigation currentPath={cleanPath} onNavigate={navigate} />
 
-      {/* Main Content Area with Desktop Sidebar Offset (w-60 = 240px) */}
       <div className="flex-1 md:pl-60 flex flex-col justify-between min-h-[calc(100vh-4rem)]">
         <main className="pt-4 flex-1">
           {renderAuthenticatedPage()}
         </main>
 
-        {/* Back-Office Application Footer */}
         <SiteFooter variant="app" onNavigate={navigate} />
       </div>
     </div>

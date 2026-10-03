@@ -31,7 +31,8 @@ import {
   Sliders,
   DollarSign
 } from 'lucide-react';
-import { useAuth, apiFetch } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 import { BusinessMember, UserRole } from '../types';
 
 export const WorkersPage: React.FC = () => {
@@ -116,16 +117,14 @@ export const WorkersPage: React.FC = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [workersRes, summaryRes] = await Promise.all([
-        apiFetch('/api/workers'),
-        apiFetch('/api/workers/summary'),
+      const [workersData, summaryData] = await Promise.all([
+        api.workers.getWorkers(),
+        api.workers.getSummary(),
       ]);
 
-      if (workersRes.ok) {
-        setWorkers(await workersRes.json());
-      }
-      if (summaryRes.ok) {
-        setSummary(await summaryRes.json());
+      setWorkers(workersData || []);
+      if (summaryData) {
+        setSummary(summaryData as any);
       }
     } catch (err) {
       console.error('Failed to load workers:', err);
@@ -145,26 +144,14 @@ export const WorkersPage: React.FC = () => {
 
     try {
       setSubmitting(true);
-      const res = await apiFetch('/api/workers', {
-        method: 'POST',
-        body: JSON.stringify({
-          name: name.trim(),
-          email: email.trim(),
-          phone: phone.trim(),
-          employeeId: employeeId.trim() || undefined,
-          role,
-          status,
-          notes: notes.trim() || undefined,
-          avatarUrl,
-          sendInvitation: creationMethod === 'invitation',
-          password: creationMethod === 'password' ? password : undefined,
-        }),
+      const json: any = await api.workers.createWorker({
+        fullName: name.trim(),
+        email: email.trim(),
+        phone: phone.trim() || undefined,
+        employeeId: employeeId.trim() || undefined,
+        role,
+        password: creationMethod === 'password' ? password : undefined,
       });
-
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.error || 'Failed to create worker account');
-      }
 
       setAddModalOpen(false);
       setName('');
@@ -174,7 +161,7 @@ export const WorkersPage: React.FC = () => {
       setNotes('');
       setPassword('123456');
 
-      if (json.invitation) {
+      if (json?.invitation) {
         setInvitationModalData({
           name: json.user_details?.full_name || name,
           email: json.user_details?.email || email,
@@ -194,10 +181,7 @@ export const WorkersPage: React.FC = () => {
 
   const handleToggleStatus = async (worker: BusinessMember) => {
     const newStatus = worker.status === 'active' ? 'inactive' : 'active';
-    await apiFetch(`/api/workers/${worker.id}`, {
-      method: 'PUT',
-      body: JSON.stringify({ status: newStatus }),
-    });
+    await api.workers.updateWorker(worker.id, { status: newStatus });
     loadData();
   };
 
@@ -209,10 +193,7 @@ export const WorkersPage: React.FC = () => {
   const handleSavePermissions = async () => {
     if (!permissionsModalWorker) return;
     try {
-      await apiFetch(`/api/workers/${permissionsModalWorker.id}`, {
-        method: 'PUT',
-        body: JSON.stringify({ permissions: tempPermissions }),
-      });
+      await api.workers.updateWorker(permissionsModalWorker.id, { permissions: tempPermissions });
       setPermissionsModalWorker(null);
       loadData();
     } catch (err) {
@@ -224,12 +205,8 @@ export const WorkersPage: React.FC = () => {
     e.preventDefault();
     if (!resetModalWorker) return;
     try {
-      const res = await apiFetch(`/api/workers/${resetModalWorker.id}/reset-password`, {
-        method: 'POST',
-        body: JSON.stringify({ newPassword: newResetPassword || '123456' }),
-      });
-      const data = await res.json();
-      if (res.ok) {
+      const data = await api.workers.resetPassword(resetModalWorker.id, newResetPassword || '123456');
+      if (data) {
         setResetSuccessMsg(data.message || 'Password reset successfully!');
         setTimeout(() => {
           setResetSuccessMsg(null);
@@ -246,9 +223,9 @@ export const WorkersPage: React.FC = () => {
     setActivityWorker(w);
     setActivityLoading(true);
     try {
-      const res = await apiFetch(`/api/workers/${w.id}/activity`);
-      if (res.ok) {
-        setActivityData(await res.json());
+      const data = await api.workers.getActivity(w.id);
+      if (data) {
+        setActivityData(data as any);
       }
     } catch (err) {
       console.error(err);

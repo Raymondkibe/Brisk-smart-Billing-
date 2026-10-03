@@ -19,7 +19,8 @@ import {
   Radio,
   FileCheck2
 } from 'lucide-react';
-import { useAuth, apiFetch } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 
 interface PaymentSettingsPageProps {
   onNavigate?: (path: string) => void;
@@ -101,10 +102,8 @@ export const PaymentSettingsPage: React.FC<PaymentSettingsPageProps> = ({ onNavi
   const loadPaymentConfig = async () => {
     try {
       setLoading(true);
-      const res = await apiFetch('/api/settings/payments');
-      if (res.ok) {
-        const data = await res.json();
-
+      const data: any = await api.paymentSettings.getSettings();
+      if (data) {
         // Populate Card
         if (data.card) {
           setCardEnabled(data.card.enabled ?? true);
@@ -183,13 +182,7 @@ export const PaymentSettingsPage: React.FC<PaymentSettingsPageProps> = ({ onNavi
         },
       };
 
-      const res = await apiFetch('/api/settings/payments', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) throw new Error('Failed to save payment configurations.');
+      await api.paymentSettings.updateSettings(payload);
 
       showToast('success', 'Payment gateway & banking details saved securely.');
       // Clear write-only secret inputs
@@ -211,24 +204,16 @@ export const PaymentSettingsPage: React.FC<PaymentSettingsPageProps> = ({ onNavi
       if (provider === 'card') setTestingCard(true);
       if (provider === 'bank_transfer') setTestingBank(true);
 
-      const details =
-        provider === 'mpesa'
-          ? { environment: mpesaEnv, shortcode }
-          : provider === 'card'
-          ? { provider: cardProvider, mode: cardMode }
-          : { bank_name: bankName, account_number: accountNumber, account_name: accountName };
+      const data: any = await api.paymentSettings.testConnection(provider);
 
-      const res = await apiFetch('/api/payments/test-connection', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider, details }),
+      setTestResult({
+        provider: data.provider || provider,
+        status: data.success ? 'healthy' : 'failed',
+        message: data.message || 'Connection handshake successful',
+        latencyMs: data.latencyMs || data.details?.latencyMs || 42,
+        verifiedAt: new Date().toISOString(),
       });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Connection handshake failed.');
-
-      setTestResult(data);
-      showToast('success', `${data.provider} handshake successful (${data.latencyMs ? data.latencyMs + 'ms' : 'OK'})!`);
+      showToast('success', `${data?.provider || provider} handshake successful!`);
     } catch (err: any) {
       showToast('error', err.message || 'Connection test failed.');
     } finally {

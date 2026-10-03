@@ -27,7 +27,8 @@ import {
   RefreshCw,
   ArrowRight
 } from 'lucide-react';
-import { useAuth, apiFetch } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import { api, axiosInstance } from '../services/api';
 import { Product, Category, Sale, Receipt } from '../types';
 import { ThermalReceiptModal } from '../components/ThermalReceiptModal';
 import QRCode from 'qrcode';
@@ -80,12 +81,11 @@ export const PosPage: React.FC<PosPageProps> = ({ initialCart, onNavigate }) => 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [prodRes, catRes] = await Promise.all([
-        apiFetch('/api/products'),
-        apiFetch('/api/categories'),
+      const [prodData, catData] = await Promise.all([
+        api.products.getProducts(),
+        api.products.getCategories(),
       ]);
-      if (prodRes.ok) {
-        const prodData: Product[] = await prodRes.json();
+      if (prodData) {
         setProducts(prodData);
 
         if (initialCart && initialCart.length > 0) {
@@ -97,8 +97,8 @@ export const PosPage: React.FC<PosPageProps> = ({ initialCart, onNavigate }) => 
           if (newCart.length > 0) setCart(newCart);
         }
       }
-      if (catRes.ok) {
-        setCategories(await catRes.json());
+      if (catData) {
+        setCategories(catData);
       }
     } catch (err) {
       console.error('Failed to load POS data:', err);
@@ -292,42 +292,35 @@ export const PosPage: React.FC<PosPageProps> = ({ initialCart, onNavigate }) => 
       setStatusMessage('Sending M-Pesa STK Push payment prompt...');
 
       // Step 1: Create Sale record with status PENDING on server
-      const saleRes = await apiFetch('/api/sales', {
-        method: 'POST',
-        body: JSON.stringify({
-          items: cart.map(i => ({ productId: i.product.id, quantity: i.quantity })),
-          customerPhone: normalizedPhone,
-          customerName: customerName.trim() || 'Valued Customer',
-          discountPercent,
-          paymentMethod: 'mpesa',
-        }),
+      const saleData = await api.sales.createSale({
+        items: cart.map(i => ({
+          product_id: i.product.id,
+          product_name: i.product.name,
+          quantity: i.quantity,
+          unit_price: i.product.selling_price,
+          total_price: i.product.selling_price * i.quantity,
+          barcode: i.product.barcode,
+          variant: i.product.variant,
+          unit: i.product.unit,
+        })),
+        customer_phone: normalizedPhone,
+        customer_name: customerName.trim() || 'Valued Customer',
+        discount_amount: (cart.reduce((s, i) => s + (i.product.selling_price * i.quantity), 0) * discountPercent) / 100,
+        subtotal: cart.reduce((s, i) => s + (i.product.selling_price * i.quantity), 0),
+        total_amount: cart.reduce((s, i) => s + (i.product.selling_price * i.quantity), 0) * (1 - discountPercent / 100),
+        payment_method: 'mpesa',
       });
 
-      if (!saleRes.ok) {
-        const err = await saleRes.json();
-        throw new Error(err.error || 'Failed to create sale');
-      }
-
-      const saleData = await saleRes.json();
       const sale: Sale = saleData.sale;
       setCurrentSale(sale);
 
       // Step 2: Trigger STK Push on server
-      const stkRes = await apiFetch('/api/payments/mpesa/stk-push', {
-        method: 'POST',
-        body: JSON.stringify({
-          saleId: sale.id,
-          phone: normalizedPhone,
-          amount: sale.total,
-        }),
+      const stkData = await api.sales.initiateMpesaStk({
+        sale_id: sale.id,
+        phone: normalizedPhone,
+        amount: sale.total,
       });
 
-      if (!stkRes.ok) {
-        const err = await stkRes.json();
-        throw new Error(err.error || 'Failed to initiate STK push');
-      }
-
-      const stkData = await stkRes.json();
       setCurrentPaymentId(stkData.paymentId);
       setPaymentStatus('PENDING');
       setStatusMessage('Waiting for customer to enter M-Pesa PIN...');
@@ -346,31 +339,29 @@ export const PosPage: React.FC<PosPageProps> = ({ initialCart, onNavigate }) => 
     const interval = setInterval(async () => {
       attempts++;
       try {
-        const res = await apiFetch(`/api/payments/${paymentId}`);
-        if (res.ok) {
-          const data = await res.json();
-          const pStatus = data.payment.status;
+        const res = await axiosInstance.get(`/payments/${paymentId}`);
+        const data = res.data;
+        const pStatus = data.payment.status;
 
-          if (pStatus === 'PAID') {
-            clearInterval(interval);
-            setPaymentStatus('PAID');
-            setCurrentReceipt(data.receipt);
-            confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
-            clearCart();
-            loadData(); // Deduct inventory from UI
-          } else if (pStatus === 'CANCELLED') {
-            clearInterval(interval);
-            setPaymentStatus('CANCELLED');
-            setStatusMessage('The customer cancelled the M-Pesa payment request.');
-          } else if (pStatus === 'FAILED') {
-            clearInterval(interval);
-            setPaymentStatus('FAILED');
-            setStatusMessage(data.payment.failure_reason || 'The M-Pesa payment could not be completed.');
-          } else if (pStatus === 'EXPIRED') {
-            clearInterval(interval);
-            setPaymentStatus('EXPIRED');
-            setStatusMessage('The payment request expired before it was completed.');
-          }
+        if (pStatus === 'PAID') {
+          clearInterval(interval);
+          setPaymentStatus('PAID');
+          setCurrentReceipt(data.receipt);
+          confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
+          clearCart();
+          loadData(); // Deduct inventory from UI
+        } else if (pStatus === 'CANCELLED') {
+          clearInterval(interval);
+          setPaymentStatus('CANCELLED');
+          setStatusMessage('The customer cancelled the M-Pesa payment request.');
+        } else if (pStatus === 'FAILED') {
+          clearInterval(interval);
+          setPaymentStatus('FAILED');
+          setStatusMessage(data.payment.failure_reason || 'The M-Pesa payment could not be completed.');
+        } else if (pStatus === 'EXPIRED') {
+          clearInterval(interval);
+          setPaymentStatus('EXPIRED');
+          setStatusMessage('The payment request expired before it was completed.');
         }
       } catch (err) {
         console.error('Polling error:', err);
@@ -390,14 +381,11 @@ export const PosPage: React.FC<PosPageProps> = ({ initialCart, onNavigate }) => 
   const handleSimulateScenario = async (scenario: 'success' | 'failure' | 'duplicate') => {
     if (!currentPaymentId) return;
     try {
-      const res = await apiFetch('/api/payments/mpesa/simulate-callback', {
-        method: 'POST',
-        body: JSON.stringify({
-          paymentId: currentPaymentId,
-          scenario,
-        }),
+      const res = await axiosInstance.post('/payments/mpesa/simulate-callback', {
+        paymentId: currentPaymentId,
+        scenario,
       });
-      const data = await res.json();
+      const data = res.data;
       if (scenario === 'success' || scenario === 'duplicate') {
         setPaymentStatus('PAID');
         setCurrentReceipt(data.receipt);
@@ -422,33 +410,31 @@ export const PosPage: React.FC<PosPageProps> = ({ initialCart, onNavigate }) => 
       setErrorMessage(null);
       setCheckoutMode('cash');
 
-      const saleRes = await apiFetch('/api/sales', {
-        method: 'POST',
-        body: JSON.stringify({
-          items: cart.map(i => ({ productId: i.product.id, quantity: i.quantity })),
-          customerPhone: customerPhone ? normalizeKenyanPhone(customerPhone) : undefined,
-          customerName: customerName || 'Cash Customer',
-          discountPercent,
-          paymentMethod: 'cash',
-        }),
+      const saleData = await api.sales.createSale({
+        items: cart.map(i => ({
+          product_id: i.product.id,
+          product_name: i.product.name,
+          quantity: i.quantity,
+          unit_price: i.product.selling_price,
+          total_price: i.product.selling_price * i.quantity,
+          barcode: i.product.barcode,
+          variant: i.product.variant,
+          unit: i.product.unit,
+        })),
+        customer_phone: customerPhone ? normalizeKenyanPhone(customerPhone) : undefined,
+        customer_name: customerName || 'Cash Customer',
+        discount_amount: (cart.reduce((s, i) => s + (i.product.selling_price * i.quantity), 0) * discountPercent) / 100,
+        subtotal: cart.reduce((s, i) => s + (i.product.selling_price * i.quantity), 0),
+        total_amount: cart.reduce((s, i) => s + (i.product.selling_price * i.quantity), 0) * (1 - discountPercent / 100),
+        payment_method: 'cash',
       });
 
-      if (!saleRes.ok) {
-        const err = await saleRes.json();
-        throw new Error(err.error || 'Failed to complete cash sale');
-      }
-
-      const saleData = await saleRes.json();
-      const payRes = await apiFetch('/api/payments/cash', {
-        method: 'POST',
-        body: JSON.stringify({
-          saleId: saleData.sale.id,
-          amount: saleData.sale.total,
-        }),
+      const payRes = await axiosInstance.post('/payments/cash', {
+        saleId: saleData.sale.id,
+        amount: saleData.sale.total,
       });
 
-      if (!payRes.ok) throw new Error('Failed to record cash payment');
-      const payData = await payRes.json();
+      const payData = payRes.data;
 
       setCurrentReceipt(payData.receipt);
       confetti({ particleCount: 70, spread: 70 });
@@ -469,27 +455,27 @@ export const PosPage: React.FC<PosPageProps> = ({ initialCart, onNavigate }) => 
       setErrorMessage(null);
       setCheckoutMode('qr');
 
-      const saleRes = await apiFetch('/api/sales', {
-        method: 'POST',
-        body: JSON.stringify({
-          items: cart.map(i => ({ productId: i.product.id, quantity: i.quantity })),
-          customerPhone: customerPhone ? normalizeKenyanPhone(customerPhone) : undefined,
-          customerName: customerName || 'QR Customer',
-          discountPercent,
-          paymentMethod: 'mpesa_qr',
-        }),
+      const saleData = await api.sales.createSale({
+        items: cart.map(i => ({
+          product_id: i.product.id,
+          product_name: i.product.name,
+          quantity: i.quantity,
+          unit_price: i.product.selling_price,
+          total_price: i.product.selling_price * i.quantity,
+          barcode: i.product.barcode,
+          variant: i.product.variant,
+          unit: i.product.unit,
+        })),
+        customer_phone: customerPhone ? normalizeKenyanPhone(customerPhone) : undefined,
+        customer_name: customerName || 'QR Customer',
+        discount_amount: (cart.reduce((s, i) => s + (i.product.selling_price * i.quantity), 0) * discountPercent) / 100,
+        subtotal: cart.reduce((s, i) => s + (i.product.selling_price * i.quantity), 0),
+        total_amount: cart.reduce((s, i) => s + (i.product.selling_price * i.quantity), 0) * (1 - discountPercent / 100),
+        payment_method: 'mpesa_qr',
       });
 
-      if (!saleRes.ok) throw new Error('Failed to initiate QR session');
-      const saleData = await saleRes.json();
-
-      const qrRes = await apiFetch('/api/payments/qr/create', {
-        method: 'POST',
-        body: JSON.stringify({ saleId: saleData.sale.id }),
-      });
-
-      if (!qrRes.ok) throw new Error('Failed to generate QR payment link');
-      const qrJson = await qrRes.json();
+      const qrRes = await axiosInstance.post('/payments/qr/create', { saleId: saleData.sale.id });
+      const qrJson = qrRes.data;
 
       const qrDataUrl = await QRCode.toDataURL(qrJson.paymentUrl, {
         width: 280,
@@ -506,17 +492,15 @@ export const PosPage: React.FC<PosPageProps> = ({ initialCart, onNavigate }) => 
       // Poll QR payment completion
       const pollQr = setInterval(async () => {
         try {
-          const checkRes = await apiFetch(`/api/payments/qr/${qrJson.token}`);
-          if (checkRes.ok) {
-            const checkData = await checkRes.json();
-            if (checkData.session?.status === 'paid') {
-              clearInterval(pollQr);
-              setCheckoutMode('idle');
-              setCurrentReceipt(checkData.receipt);
-              confetti({ particleCount: 80, spread: 70 });
-              clearCart();
-              loadData();
-            }
+          const checkRes = await axiosInstance.get(`/payments/qr/${qrJson.token}`);
+          const checkData = checkRes.data;
+          if (checkData.session?.status === 'paid') {
+            clearInterval(pollQr);
+            setCheckoutMode('idle');
+            setCurrentReceipt(checkData.receipt);
+            confetti({ particleCount: 80, spread: 70 });
+            clearCart();
+            loadData();
           }
         } catch (err) {
           console.error(err);
