@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import QRCode from 'qrcode';
+import { QRCodeSVG } from 'qrcode.react';
 import {
   Printer,
   Share2,
@@ -33,34 +33,19 @@ export const ThermalReceiptModal: React.FC<ThermalReceiptModalProps> = ({
   autoPrint = false,
 }) => {
   const { activeBusiness } = useAuth();
-  const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [copied, setCopied] = useState(false);
   const [paperSize, setPaperSize] = useState<'80mm' | '58mm'>('80mm');
   const [showStoreBranding, setShowStoreBranding] = useState(true);
 
-  // Generate QR Code for live verification
-  useEffect(() => {
-    if (receipt) {
-      const verifyUrl = `${window.location.origin}/verify-receipt/${receipt.verification_token}`;
-      QRCode.toDataURL(verifyUrl, {
-        margin: 1,
-        width: 160,
-        color: { dark: '#000000', light: '#ffffff' },
-      })
-        .then(setQrDataUrl)
-        .catch(console.error);
-    }
-  }, [receipt]);
-
   // Handle optional auto-print when opened
   useEffect(() => {
-    if (receipt && autoPrint && qrDataUrl) {
+    if (receipt && autoPrint) {
       const timer = setTimeout(() => {
         window.print();
-      }, 400);
+      }, 350);
       return () => clearTimeout(timer);
     }
-  }, [receipt, autoPrint, qrDataUrl]);
+  }, [receipt, autoPrint]);
 
   if (!receipt) return null;
 
@@ -361,19 +346,20 @@ export const ThermalReceiptModal: React.FC<ThermalReceiptModalProps> = ({
               )}
             </div>
 
-            {/* VERIFICATION QR CODE */}
+            {/* VERIFICATION QR CODE (Powered by qrcode.react) */}
             <div className="pt-3 text-center">
-              {qrDataUrl && (
-                <div className="inline-block p-1 bg-white border border-slate-300 rounded-sm">
-                  <img
-                    src={qrDataUrl}
-                    alt="Receipt Verification QR"
-                    className="w-28 h-28 mx-auto object-contain filter contrast-150"
-                  />
-                </div>
-              )}
+              <div className="inline-block p-1 bg-white border border-slate-900 rounded-xs shadow-2xs">
+                <QRCodeSVG
+                  value={verifyUrl}
+                  size={paperSize === '80mm' ? 120 : 96}
+                  level="M"
+                  marginSize={1}
+                  fgColor="#000000"
+                  bgColor="#ffffff"
+                />
+              </div>
               <p className="text-[10px] font-bold text-slate-900 mt-1 uppercase tracking-wider">
-                Scan QR to Verify Receipt
+                Scan QR to Verify Genuine Receipt
               </p>
               <p className="text-[9px] text-slate-500 font-mono truncate max-w-[200px] mx-auto">
                 Token: {receipt.verification_token.slice(0, 16)}...

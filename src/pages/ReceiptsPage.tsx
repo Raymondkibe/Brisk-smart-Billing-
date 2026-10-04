@@ -13,12 +13,14 @@ import {
   CheckCircle2,
   TrendingUp,
   FileText,
-  RotateCw
+  RotateCw,
+  QrCode
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { Receipt } from '../types';
 import { ThermalReceiptModal } from '../components/ThermalReceiptModal';
+import { TransactionQRModal } from '../components/TransactionQRCode';
 
 export const ReceiptsPage: React.FC = () => {
   const { activeBusiness } = useAuth();
@@ -26,6 +28,7 @@ export const ReceiptsPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [methodFilter, setMethodFilter] = useState<'all' | 'mpesa' | 'cash' | 'bank_transfer' | 'card'>('all');
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
+  const [selectedQrReceipt, setSelectedQrReceipt] = useState<Receipt | null>(null);
   const [autoPrint, setAutoPrint] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -297,6 +300,17 @@ export const ReceiptsPage: React.FC = () => {
                           <span>Print</span>
                         </button>
 
+                        {/* Customer QR Verification Code */}
+                        <button
+                          type="button"
+                          onClick={() => setSelectedQrReceipt(r)}
+                          title="Generate Scannable QR Code"
+                          className="inline-flex items-center gap-1 px-2 py-1 text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-md font-medium text-[11px] transition-colors cursor-pointer"
+                        >
+                          <QrCode className="w-3.5 h-3.5 text-blue-600" />
+                          <span>QR</span>
+                        </button>
+
                         {/* View Preview Button */}
                         <button
                           type="button"
@@ -328,6 +342,17 @@ export const ReceiptsPage: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Transaction QR Modal */}
+      <TransactionQRModal
+        receipt={selectedQrReceipt}
+        onClose={() => setSelectedQrReceipt(null)}
+        onOpenReceipt={r => {
+          setSelectedQrReceipt(null);
+          setSelectedReceipt(r);
+          setAutoPrint(false);
+        }}
+      />
 
       {/* Thermal Receipt Modal & Print Controller */}
       <ThermalReceiptModal

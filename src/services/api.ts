@@ -369,6 +369,32 @@ export const salesApi = {
     return res.data;
   },
 
+  getReceiptBySaleId: async (id: string) => {
+    const res = await axiosInstance.get<{
+      success: boolean;
+      receipt: Receipt;
+      verifyUrl: string;
+      verificationToken: string;
+    }>(`/sales/${id}/receipt`);
+    return res.data;
+  },
+
+  getSaleQr: async (id: string) => {
+    const res = await axiosInstance.get<{
+      success: boolean;
+      saleId: string;
+      saleNumber: string;
+      receiptNumber: string | null;
+      verificationToken: string;
+      verifyUrl: string;
+      amount: number;
+      customerName: string;
+      paymentStatus: string;
+      issuedAt: string;
+    }>(`/sales/${id}/qr`);
+    return res.data;
+  },
+
   initiateMpesaStk: async (payload: {
     phone: string;
     amount: number;

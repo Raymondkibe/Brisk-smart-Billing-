@@ -23,6 +23,7 @@ import {
   UserProfile,
   UserRole,
   Subscription,
+  Receipt,
   Brand,
   SmsConfig,
   CustomerNotification,
@@ -1165,6 +1166,84 @@ apiRouter.get('/sales/:id', (req: AuthenticatedRequest, res: Response) => {
   const sale = db.getSaleById(req.params.id, req.businessId!);
   if (!sale) return res.status(404).json({ error: 'Sale not found' });
   return res.json(sale);
+});
+
+// Get or Generate Receipt for Sale
+apiRouter.get('/sales/:id/receipt', async (req: AuthenticatedRequest, res: Response) => {
+  const businessId = req.businessId!;
+  const sale = db.getSaleById(req.params.id, businessId);
+  if (!sale) return res.status(404).json({ error: 'Sale transaction not found' });
+
+  let receipt = db.getReceiptBySaleId(sale.id);
+
+  // If sale is PAID but receipt record doesn't exist yet, generate sequential receipt
+  if (!receipt && sale.payment_status === 'PAID') {
+    const receiptNumber = db.nextReceiptNumber(businessId);
+    const token = generateToken(32);
+    const newReceipt: Receipt = {
+      id: generateId('rec'),
+      business_id: businessId,
+      sale_id: sale.id,
+      receipt_number: receiptNumber,
+      verification_token: token,
+      issued_at: new Date().toISOString(),
+    };
+    receipt = db.createReceipt(newReceipt);
+  }
+
+  if (!receipt) {
+    return res.status(400).json({ error: 'Receipt not yet generated for uncompleted transaction' });
+  }
+
+  const hydrated = db.hydrateReceipt(receipt);
+  const appUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
+  const verifyUrl = `${appUrl}/verify-receipt/${hydrated.verification_token}`;
+
+  return res.json({
+    success: true,
+    receipt: hydrated,
+    verifyUrl,
+    verificationToken: hydrated.verification_token,
+  });
+});
+
+// Get QR Code Verification Payload for Transaction
+apiRouter.get('/sales/:id/qr', async (req: AuthenticatedRequest, res: Response) => {
+  const businessId = req.businessId!;
+  const sale = db.getSaleById(req.params.id, businessId);
+  if (!sale) return res.status(404).json({ error: 'Sale transaction not found' });
+
+  let receipt = db.getReceiptBySaleId(sale.id);
+  if (!receipt && sale.payment_status === 'PAID') {
+    const receiptNumber = db.nextReceiptNumber(businessId);
+    const token = generateToken(32);
+    const newReceipt: Receipt = {
+      id: generateId('rec'),
+      business_id: businessId,
+      sale_id: sale.id,
+      receipt_number: receiptNumber,
+      verification_token: token,
+      issued_at: new Date().toISOString(),
+    };
+    receipt = db.createReceipt(newReceipt);
+  }
+
+  const appUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
+  const verificationToken = receipt?.verification_token || generateToken(32);
+  const verifyUrl = `${appUrl}/verify-receipt/${verificationToken}`;
+
+  return res.json({
+    success: true,
+    saleId: sale.id,
+    saleNumber: sale.sale_number,
+    receiptNumber: receipt?.receipt_number || null,
+    verificationToken,
+    verifyUrl,
+    amount: sale.total,
+    customerName: sale.customer_name || 'Customer',
+    paymentStatus: sale.payment_status,
+    issuedAt: receipt?.issued_at || sale.created_at,
+  });
 });
 
 // ============================================================================

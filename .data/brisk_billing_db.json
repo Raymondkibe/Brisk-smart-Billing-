@@ -311,12 +311,12 @@
       "buying_price": 55,
       "vat_type": "default",
       "tax_rate": 16,
-      "stock_quantity": 150,
+      "stock_quantity": 148,
       "low_stock_threshold": 15,
       "fractional_quantity_allowed": false,
       "active": true,
       "created_at": "2026-10-02T12:09:09.564Z",
-      "updated_at": "2026-10-02T12:09:09.564Z"
+      "updated_at": "2026-10-04T12:23:35.965Z"
     },
     {
       "id": "prod_milk_1l",
@@ -397,11 +397,240 @@
       "updated_at": "2026-10-02T12:09:09.564Z"
     }
   ],
-  "inventory_movements": [],
-  "customers": [],
-  "sales": [],
-  "sale_items": [],
-  "payments": [],
+  "inventory_movements": [
+    {
+      "id": "mov_ecef51c12a25",
+      "business_id": "biz_abc_shop_001",
+      "product_id": "prod_milk_500ml",
+      "product_name": "Brookside Fresh Milk 500ml",
+      "type": "sale",
+      "quantity": -2,
+      "opening_stock": 150,
+      "remaining_stock": 148,
+      "reference_type": "sale",
+      "reference_id": "sale_e82097a05d19",
+      "reason": "POS Sale #S-615964 [Paid via CASH]",
+      "created_by": "usr_owner_001",
+      "created_by_name": "Staff",
+      "created_at": "2026-10-04T12:23:35.965Z"
+    }
+  ],
+  "customers": [
+    {
+      "id": "cust_1211f78ce193",
+      "business_id": "biz_abc_shop_001",
+      "name": "Amina Wanjiku",
+      "phone": "+254712345678",
+      "total_spent": 140,
+      "orders_count": 1,
+      "created_at": "2026-10-04T12:23:11.356Z",
+      "updated_at": "2026-10-04T12:23:35.965Z"
+    }
+  ],
+  "sales": [
+    {
+      "id": "sale_794b9a2b5fad",
+      "business_id": "biz_abc_shop_001",
+      "customer_id": "cust_1211f78ce193",
+      "customer_name": "Amina Wanjiku",
+      "customer_phone": "0712345678",
+      "worker_id": "usr_owner_001",
+      "worker_name": "Cashier",
+      "sale_number": "S-591357",
+      "subtotal": 120.69,
+      "discount": 0,
+      "tax": 19.31,
+      "total": 140,
+      "status": "pending",
+      "payment_status": "PENDING",
+      "payment_method": "mpesa",
+      "items": [
+        {
+          "id": "sitem_95eae52b2fa4",
+          "sale_id": "sale_794b9a2b5fad",
+          "product_id": "prod_milk_500ml",
+          "product_name_snapshot": "Brookside Fresh Milk 500ml",
+          "brand_name": "Brookside",
+          "variant": "Fresh Milk",
+          "size": "500",
+          "quantity": 2,
+          "unit": "ml",
+          "unit_size": "500 ml",
+          "unit_price": 70,
+          "discount": 0,
+          "tax_rate": 16,
+          "tax_amount": 19.31,
+          "tax": 19.31,
+          "subtotal": 120.69,
+          "total": 140,
+          "created_at": "2026-10-04T12:23:11.357Z"
+        }
+      ],
+      "created_at": "2026-10-04T12:23:11.357Z",
+      "updated_at": "2026-10-04T12:23:11.357Z"
+    },
+    {
+      "id": "sale_70998c7656e9",
+      "business_id": "biz_abc_shop_001",
+      "customer_id": "cust_1211f78ce193",
+      "customer_name": "Amina Wanjiku",
+      "customer_phone": "0712345678",
+      "worker_id": "usr_owner_001",
+      "worker_name": "Cashier",
+      "sale_number": "S-606583",
+      "subtotal": 120.69,
+      "discount": 0,
+      "tax": 19.31,
+      "total": 140,
+      "status": "pending",
+      "payment_status": "PENDING",
+      "payment_method": "cash",
+      "items": [
+        {
+          "id": "sitem_1073edd51e8f",
+          "sale_id": "sale_70998c7656e9",
+          "product_id": "prod_milk_500ml",
+          "product_name_snapshot": "Brookside Fresh Milk 500ml",
+          "brand_name": "Brookside",
+          "variant": "Fresh Milk",
+          "size": "500",
+          "quantity": 2,
+          "unit": "ml",
+          "unit_size": "500 ml",
+          "unit_price": 70,
+          "discount": 0,
+          "tax_rate": 16,
+          "tax_amount": 19.31,
+          "tax": 19.31,
+          "subtotal": 120.69,
+          "total": 140,
+          "created_at": "2026-10-04T12:23:26.583Z"
+        }
+      ],
+      "created_at": "2026-10-04T12:23:26.583Z",
+      "updated_at": "2026-10-04T12:23:26.583Z"
+    },
+    {
+      "id": "sale_e82097a05d19",
+      "business_id": "biz_abc_shop_001",
+      "customer_id": "cust_1211f78ce193",
+      "customer_name": "Amina Wanjiku",
+      "customer_phone": "0712345678",
+      "worker_id": "usr_owner_001",
+      "worker_name": "Cashier",
+      "sale_number": "S-615964",
+      "subtotal": 120.69,
+      "discount": 0,
+      "tax": 19.31,
+      "total": 140,
+      "status": "completed",
+      "payment_status": "PAID",
+      "payment_method": "cash",
+      "items": [
+        {
+          "id": "sitem_7aa3e028e276",
+          "sale_id": "sale_e82097a05d19",
+          "product_id": "prod_milk_500ml",
+          "product_name_snapshot": "Brookside Fresh Milk 500ml",
+          "brand_name": "Brookside",
+          "variant": "Fresh Milk",
+          "size": "500",
+          "quantity": 2,
+          "unit": "ml",
+          "unit_size": "500 ml",
+          "unit_price": 70,
+          "discount": 0,
+          "tax_rate": 16,
+          "tax_amount": 19.31,
+          "tax": 19.31,
+          "subtotal": 120.69,
+          "total": 140,
+          "created_at": "2026-10-04T12:23:35.963Z"
+        }
+      ],
+      "created_at": "2026-10-04T12:23:35.964Z",
+      "updated_at": "2026-10-04T12:23:35.965Z"
+    }
+  ],
+  "sale_items": [
+    {
+      "id": "sitem_95eae52b2fa4",
+      "sale_id": "sale_794b9a2b5fad",
+      "product_id": "prod_milk_500ml",
+      "product_name_snapshot": "Brookside Fresh Milk 500ml",
+      "brand_name": "Brookside",
+      "variant": "Fresh Milk",
+      "size": "500",
+      "quantity": 2,
+      "unit": "ml",
+      "unit_size": "500 ml",
+      "unit_price": 70,
+      "discount": 0,
+      "tax_rate": 16,
+      "tax_amount": 19.31,
+      "tax": 19.31,
+      "subtotal": 120.69,
+      "total": 140,
+      "created_at": "2026-10-04T12:23:11.357Z"
+    },
+    {
+      "id": "sitem_1073edd51e8f",
+      "sale_id": "sale_70998c7656e9",
+      "product_id": "prod_milk_500ml",
+      "product_name_snapshot": "Brookside Fresh Milk 500ml",
+      "brand_name": "Brookside",
+      "variant": "Fresh Milk",
+      "size": "500",
+      "quantity": 2,
+      "unit": "ml",
+      "unit_size": "500 ml",
+      "unit_price": 70,
+      "discount": 0,
+      "tax_rate": 16,
+      "tax_amount": 19.31,
+      "tax": 19.31,
+      "subtotal": 120.69,
+      "total": 140,
+      "created_at": "2026-10-04T12:23:26.583Z"
+    },
+    {
+      "id": "sitem_7aa3e028e276",
+      "sale_id": "sale_e82097a05d19",
+      "product_id": "prod_milk_500ml",
+      "product_name_snapshot": "Brookside Fresh Milk 500ml",
+      "brand_name": "Brookside",
+      "variant": "Fresh Milk",
+      "size": "500",
+      "quantity": 2,
+      "unit": "ml",
+      "unit_size": "500 ml",
+      "unit_price": 70,
+      "discount": 0,
+      "tax_rate": 16,
+      "tax_amount": 19.31,
+      "tax": 19.31,
+      "subtotal": 120.69,
+      "total": 140,
+      "created_at": "2026-10-04T12:23:35.963Z"
+    }
+  ],
+  "payments": [
+    {
+      "id": "pay_8f09e7d4cbec",
+      "business_id": "biz_abc_shop_001",
+      "sale_id": "sale_e82097a05d19",
+      "provider": "cash",
+      "method": "cash",
+      "amount": 140,
+      "phone": "0712345678",
+      "status": "PAID",
+      "reference": "CASH-615964",
+      "created_at": "2026-10-04T12:23:35.964Z",
+      "updated_at": "2026-10-04T12:23:35.965Z",
+      "provider_transaction_id": "CASH-615964",
+      "completed_at": "2026-10-04T12:23:35.965Z"
+    }
+  ],
   "mpesa_configs": [
     {
       "id": "mpesa_cfg_abc_001",
@@ -416,11 +645,47 @@
     }
   ],
   "mpesa_callbacks": [],
-  "receipts": [],
+  "receipts": [
+    {
+      "id": "rec_279765782360",
+      "business_id": "biz_abc_shop_001",
+      "sale_id": "sale_e82097a05d19",
+      "receipt_number": "BRK-000125",
+      "verification_token": "e0cb1e231b22502cb55f053505592b5b4febdaa135415423",
+      "issued_at": "2026-10-04T12:23:35.965Z"
+    }
+  ],
   "qr_payment_sessions": [],
   "expenses": [],
-  "notifications": [],
-  "audit_logs": [],
+  "notifications": [
+    {
+      "id": "notif_cf8208691a2b",
+      "business_id": "biz_abc_shop_001",
+      "type": "payment_success",
+      "title": "Payment Confirmed",
+      "message": "M-Pesa payment of KES 140 confirmed (Receipt BRK-000125).",
+      "read": false,
+      "created_at": "2026-10-04T12:23:35.965Z"
+    }
+  ],
+  "audit_logs": [
+    {
+      "business_id": "biz_abc_shop_001",
+      "user_id": "usr_owner_001",
+      "user_name": "Staff",
+      "action": "payment_successful",
+      "resource_type": "payment",
+      "resource_id": "pay_8f09e7d4cbec",
+      "metadata": {
+        "saleNumber": "S-615964",
+        "receiptNumber": "BRK-000125",
+        "amount": 140,
+        "reference": "CASH-615964"
+      },
+      "id": "log_7cb65df6d9b9",
+      "created_at": "2026-10-04T12:23:35.973Z"
+    }
+  ],
   "support_tickets": [
     {
       "id": "inquiry_059a524e625e",
@@ -438,7 +703,7 @@
     }
   ],
   "receipt_counters": {
-    "biz_abc_shop_001": 124
+    "biz_abc_shop_001": 125
   },
   "brands": [
     {
@@ -476,7 +741,26 @@
       "updated_at": "2026-10-02T12:09:09.564Z"
     }
   ],
-  "customer_notifications": [],
+  "customer_notifications": [
+    {
+      "id": "cnotif_19585f47facd",
+      "business_id": "biz_abc_shop_001",
+      "customer_phone": "+254712345678",
+      "customer_phone_masked": "+2547******78",
+      "notification_type": "PAYMENT_SUCCESS",
+      "status": "DELIVERED",
+      "message": "ABC SHOP: Payment of KES 140 received successfully. Receipt #BRK-000125. View receipt: https://brisksmartbilling.co.ke/verify-receipt/e0cb1e231b22502cb55f053505592b5b4febdaa135415423",
+      "amount": 140,
+      "receipt_id": "rec_279765782360",
+      "receipt_number": "BRK-000125",
+      "receipt_token": "e0cb1e231b22502cb55f053505592b5b4febdaa135415423",
+      "receipt_url": "https://brisksmartbilling.co.ke/verify-receipt/e0cb1e231b22502cb55f053505592b5b4febdaa135415423",
+      "provider": "simulator",
+      "created_at": "2026-10-04T12:23:35.965Z",
+      "provider_message_id": "SIM-MUTSL5WN-938B1E",
+      "delivered_at": "2026-10-04T12:23:35.976Z"
+    }
+  ],
   "email_verifications": [],
   "password_resets": [],
   "worker_invitations": [],
