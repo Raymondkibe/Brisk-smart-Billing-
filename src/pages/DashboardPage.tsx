@@ -20,6 +20,7 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { Sale, Receipt } from '../types';
 import { ThermalReceiptModal } from '../components/ThermalReceiptModal';
+import { DashboardWidget } from '../components/DashboardWidget';
 
 interface DashboardPageProps {
   onNavigate: (path: string) => void;
@@ -197,6 +198,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
         </div>
 
       </div>
+
+      {/* 7-Day Daily Sales Trends (Recharts Widget) */}
+      <DashboardWidget
+        data={metrics?.dailyTrends}
+        currency={activeBusiness?.currency || 'KES'}
+        title="7-Day Daily Sales Trends"
+      />
 
       {/* Middle Row: Top Products & Quick Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -3119,6 +3119,40 @@ apiRouter.get('/reports/summary', (req: AuthenticatedRequest, res: Response) => 
   // Low stock products
   const lowStockProducts = products.filter(p => p.stock_quantity <= p.low_stock_threshold);
 
+  // 7-day daily trend calculation for Recharts widget
+  const dailyTrends: Array<{
+    date: string;
+    label: string;
+    revenue: number;
+    transactions: number;
+    mpesaRevenue: number;
+    cashRevenue: number;
+  }> = [];
+
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dayStr = d.toISOString().split('T')[0];
+    const dayLabel = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' });
+    const daySales = completedSales.filter(s => s.created_at.startsWith(dayStr));
+    const dayRevenue = daySales.reduce((sum, s) => sum + s.total, 0);
+    const mpesaRevenue = daySales
+      .filter(s => (s.payment_method || '').toLowerCase().includes('mpesa'))
+      .reduce((sum, s) => sum + s.total, 0);
+    const cashRevenue = daySales
+      .filter(s => (s.payment_method || '').toLowerCase() === 'cash')
+      .reduce((sum, s) => sum + s.total, 0);
+
+    dailyTrends.push({
+      date: dayStr,
+      label: dayLabel,
+      revenue: dayRevenue,
+      transactions: daySales.length,
+      mpesaRevenue,
+      cashRevenue,
+    });
+  }
+
   return res.json({
     totalRevenue,
     totalExpenses,
@@ -3136,6 +3170,7 @@ apiRouter.get('/reports/summary', (req: AuthenticatedRequest, res: Response) => 
     lowStockCount: lowStockProducts.length,
     lowStockProducts: lowStockProducts.slice(0, 5),
     workersCount: workers.length,
+    dailyTrends,
   });
 });
 
