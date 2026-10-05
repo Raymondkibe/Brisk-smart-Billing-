@@ -12,11 +12,9 @@ import {
   User,
   ExternalLink,
   HelpCircle,
-  Clock,
-  LayoutDashboard
+  Clock
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { BrandLogo } from './BrandLogo';
 
 interface SiteHeaderProps {
   currentPath: string;
@@ -61,7 +59,16 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ currentPath, onNavigate 
             onClick={() => handleNav('/')}
             className="flex items-center gap-2 text-left group cursor-pointer min-w-0"
           >
-            <BrandLogo size="sm" />
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl overflow-hidden bg-blue-600 shrink-0 shadow-md shadow-blue-500/20">
+              <img
+                src="/favicon_logo_1790884666478.jpg"
+                alt="BRISK SMART BILLING"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
+            </div>
             <div className="min-w-0">
               <span className="text-sm sm:text-base font-extrabold tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors block leading-tight truncate">
                 BRISK SMART BILLING
@@ -190,25 +197,10 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ currentPath, onNavigate 
             )
           )}
 
-          {/* Direct Dashboard Button for Authenticated Users */}
-          {user && (
-            <button
-              onClick={() => handleNav('/dashboard')}
-              className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer ${
-                currentPath === '/dashboard'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-700 bg-slate-100 hover:bg-slate-200'
-              }`}
-            >
-              <LayoutDashboard className="w-3.5 h-3.5" />
-              <span>Dashboard</span>
-            </button>
-          )}
-
           {/* Primary POS Action Button */}
           {currentPath === '/sales/new' ? (
             <button
-              onClick={() => handleNav('/dashboard')}
+              onClick={() => handleNav(getDefaultPath())}
               className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
             >
               <span>Workspace</span>
@@ -270,21 +262,12 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ currentPath, onNavigate 
 
             <div className="pt-1 flex flex-col gap-2">
               {user ? (
-                <>
-                  <button
-                    onClick={() => handleNav('/dashboard')}
-                    className="w-full text-center py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-blue-500/20"
-                  >
-                    <LayoutDashboard className="w-3.5 h-3.5" />
-                    <span>Go to Dashboard</span>
-                  </button>
-                  <button
-                    onClick={() => handleNav('/sales/new')}
-                    className="w-full text-center py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-semibold cursor-pointer"
-                  >
-                    Launch POS Speed Register
-                  </button>
-                </>
+                <button
+                  onClick={() => handleNav(getDefaultPath())}
+                  className="w-full text-center py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-semibold cursor-pointer"
+                >
+                  Go to Workspace Dashboard
+                </button>
               ) : (
                 <>
                   <button

@@ -75,17 +75,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isCashier = role === 'cashier' && !isOwner && !isSuperAdmin;
   const isSales = role === 'sales_worker' && !isOwner && !isSuperAdmin;
 
-  const getDefaultPath = useCallback((_roleOverride?: string | null): string => {
+  const getDefaultPath = useCallback((roleOverride?: string | null): string => {
+    const activeRole = roleOverride || role;
+    if (activeRole === 'super_admin') return '/admin';
+    if (activeRole === 'cashier' || activeRole === 'sales_worker') return '/sales/new';
     return '/dashboard';
-  }, []);
+  }, [role]);
 
   /**
    * Save a requested destination URL during unauthenticated navigation attempt
    */
   const saveRedirectPath = useCallback((path: string) => {
-    if (!path) return;
-    const clean = path.split('?')[0].split('#')[0].replace(/\/+$/, '') || '/';
-    if (clean === '/login' || clean === '/' || clean === '/register-business' || clean === '/onboarding' || clean === '/contact') {
+    if (!path || path === '/login' || path === '/' || path === '/register-business') {
       return;
     }
     try {
@@ -103,8 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const saved = sessionStorage.getItem(REDIRECT_STORAGE_KEY);
       if (saved) {
         sessionStorage.removeItem(REDIRECT_STORAGE_KEY);
-        const clean = saved.split('?')[0].split('#')[0].replace(/\/+$/, '') || '/';
-        if (clean !== '/login' && clean !== '/' && clean !== '/register-business' && clean !== '/onboarding' && clean !== '/contact') {
+        if (saved !== '/login' && saved !== '/' && saved !== '/register-business') {
           return saved;
         }
       }
@@ -211,7 +211,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         data.member?.role ||
         (data.user?.is_super_admin ? 'super_admin' : (data.businesses?.some((b: Business) => b.owner_id === data.user?.id) ? 'owner' : 'cashier'));
 
-      const defaultPath = '/dashboard';
+      const defaultPath =
+        dynamicRole === 'cashier' || dynamicRole === 'sales_worker'
+          ? '/sales/new'
+          : dynamicRole === 'super_admin' || data.user?.is_super_admin
+          ? '/admin'
+          : '/dashboard';
+
+      // Check if user had a previous requested path in session storage
       const savedRedirect = getAndClearRedirectPath();
       const targetPath = savedRedirect || defaultPath;
 

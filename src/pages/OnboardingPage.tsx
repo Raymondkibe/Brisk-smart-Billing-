@@ -81,7 +81,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onComplete }) =>
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg overflow-hidden bg-blue-600 shrink-0">
                 <img
-                  src="/logo.png"
+                  src="/apple-touch-icon.png"
                   alt="Logo"
                   className="w-full h-full object-cover"
                 />

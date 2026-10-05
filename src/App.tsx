@@ -71,6 +71,11 @@ function useRouter() {
   const navigate = useCallback((targetPath: string, options?: { replace?: boolean }) => {
     if (!targetPath) return;
 
+    if (targetPath === currentUrl) {
+      window.scrollTo(0, 0);
+      return;
+    }
+
     if (options?.replace) {
       window.history.replaceState({ path: targetPath }, '', targetPath);
     } else {
@@ -83,10 +88,10 @@ function useRouter() {
 
     const timer = setTimeout(() => {
       setIsTransitioning(false);
-    }, 120);
+    }, 180);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [currentUrl]);
 
   return {
     currentUrl,
@@ -120,52 +125,12 @@ function AppContent() {
     cleanPath.startsWith('/pay/') ||
     cleanPath.startsWith('/verify-receipt/');
 
-  // Dynamically synchronize OpenGraph, Canonical, and Favicon metadata to current origin
-  useEffect(() => {
-    try {
-      const origin = window.location.origin;
-      const canonicalEl = document.querySelector('link[rel="canonical"]');
-      if (canonicalEl) {
-        canonicalEl.setAttribute('href', `${origin}${cleanPath}`);
-      }
-
-      const ogUrl = document.querySelector('meta[property="og:url"]');
-      if (ogUrl) {
-        ogUrl.setAttribute('content', `${origin}${cleanPath}`);
-      }
-
-      const ogImage = document.querySelector('meta[property="og:image"]');
-      if (ogImage) {
-        ogImage.setAttribute('content', `${origin}/og_image_preview.jpg`);
-      }
-
-      const ogImageSecure = document.querySelector('meta[property="og:image:secure_url"]');
-      if (ogImageSecure) {
-        ogImageSecure.setAttribute('content', `${origin}/og_image_preview.jpg`);
-      }
-
-      const twitterImage = document.querySelector('meta[name="twitter:image"]');
-      if (twitterImage) {
-        twitterImage.setAttribute('content', `${origin}/og_image_preview.jpg`);
-      }
-    } catch {
-      // Ignore head manipulation errors
-    }
-  }, [cleanPath]);
-
   // When an unauthenticated user attempts to visit a protected route, preserve their requested path in session storage
   useEffect(() => {
     if (!loading && !user && !isPublicRoute) {
       saveRedirectPath(currentUrl);
     }
   }, [loading, user, isPublicRoute, currentUrl, saveRedirectPath]);
-
-  // If an authenticated user is on /login or /register-business, redirect them directly to their workspace dashboard
-  useEffect(() => {
-    if (user && (cleanPath === '/login' || cleanPath === '/register-business')) {
-      navigate('/dashboard', { replace: true });
-    }
-  }, [user, cleanPath, navigate]);
 
   // Show a clean, branded loading spinner while authenticating initial session
   if (loading) {
@@ -177,7 +142,7 @@ function AppContent() {
   }
 
   // 1. Render Public & Standalone Pages
-  if (isPublicRoute && !(user && (cleanPath === '/login' || cleanPath === '/register-business'))) {
+  if (isPublicRoute) {
     return (
       <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-between selection:bg-blue-600 selection:text-white font-sans">
         <SiteHeader currentPath={cleanPath} onNavigate={navigate} />
@@ -190,25 +155,20 @@ function AppContent() {
           {cleanPath === '/login' && (
             <LoginPage
               onNavigate={navigate}
-              onSuccess={(targetPath) => {
-                const dest = targetPath && targetPath !== '/login' && targetPath !== '/register-business'
-                  ? targetPath
-                  : '/dashboard';
-                navigate(dest, { replace: true });
-              }}
+              onSuccess={(targetPath) => navigate(targetPath || getDefaultPath())}
             />
           )}
 
           {cleanPath === '/register-business' && (
             <RegisterBusinessPage
-              onSuccess={() => navigate('/dashboard', { replace: true })}
+              onSuccess={() => navigate('/dashboard')}
               onNavigate={navigate}
             />
           )}
 
           {cleanPath === '/onboarding' && (
             <OnboardingPage
-              onComplete={() => navigate('/dashboard', { replace: true })}
+              onComplete={() => navigate('/dashboard')}
             />
           )}
 
@@ -239,7 +199,7 @@ function AppContent() {
           <LoginPage
             onNavigate={navigate}
             onSuccess={(targetPath) => {
-              navigate(targetPath || '/dashboard', { replace: true });
+              navigate(targetPath || getDefaultPath());
             }}
           />
         </div>

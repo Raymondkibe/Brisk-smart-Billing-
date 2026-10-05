@@ -78,7 +78,7 @@ export const VerifyReceiptPage: React.FC<VerifyReceiptPageProps> = ({ token }) =
         <div className="bg-emerald-600 text-white p-6 text-center">
           <div className="w-12 h-12 rounded-xl overflow-hidden bg-white/20 mx-auto mb-2 shadow-sm">
             <img
-              src="/logo.png"
+              src="/apple-touch-icon.png"
               alt="BRISK SMART BILLING"
               className="w-full h-full object-cover"
             />
@@ -162,7 +162,7 @@ export const VerifyReceiptPage: React.FC<VerifyReceiptPageProps> = ({ token }) =
         <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 text-center flex flex-col items-center justify-center">
           <div className="flex items-center gap-2 mb-1">
             <img
-              src="/logo.png"
+              src="/apple-touch-icon.png"
               alt="Logo"
               className="w-5 h-5 rounded-md object-cover shadow-2xs"
             />

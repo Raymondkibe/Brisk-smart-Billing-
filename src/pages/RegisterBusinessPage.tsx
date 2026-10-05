@@ -15,7 +15,6 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { BrandLogo } from '../components/BrandLogo';
 
 interface RegisterBusinessPageProps {
   onSuccess: () => void;
@@ -73,7 +72,9 @@ export const RegisterBusinessPage: React.FC<RegisterBusinessPageProps> = ({ onSu
       }
 
       setSuccess(true);
-      onSuccess();
+      setTimeout(() => {
+        onSuccess();
+      }, 500);
     } catch (err: any) {
       setError(err.message || 'Registration failed');
     } finally {
@@ -100,7 +101,17 @@ export const RegisterBusinessPage: React.FC<RegisterBusinessPageProps> = ({ onSu
             </button>
           </div>
 
-          <BrandLogo size="lg" className="mx-auto mb-2" />
+          <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-blue-600 flex items-center justify-center font-bold text-lg shadow-md shadow-blue-500/25 overflow-hidden">
+            <img
+              src="/favicon_logo_1790884666478.jpg"
+              alt="BRISK SMART BILLING"
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                // Fallback text if image load error
+                (e.target as HTMLElement).style.display = 'none';
+              }}
+            />
+          </div>
           <h2 className="text-xl font-bold tracking-tight">Register Your Business</h2>
           <p className="text-xs text-blue-400 font-semibold uppercase tracking-wider mt-0.5">BRISK SMART BILLING</p>
           <p className="text-xs text-slate-400 mt-1">

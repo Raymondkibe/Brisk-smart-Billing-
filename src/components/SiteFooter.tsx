@@ -20,7 +20,6 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { BrandLogo } from './BrandLogo';
 
 interface SiteFooterProps {
   variant?: 'public' | 'app';
@@ -51,7 +50,11 @@ export const SiteFooter: React.FC<SiteFooterProps> = ({ variant = 'public', onNa
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-3 gap-y-1 text-center md:text-left">
             <span className="font-bold text-slate-800 flex items-center gap-2">
-              <BrandLogo size="xs" className="w-5 h-5 rounded-md" />
+              <img
+                src="/apple-touch-icon.png"
+                alt="Logo"
+                className="w-5 h-5 rounded-md object-cover shadow-2xs shrink-0"
+              />
               <span>BRISK SMART BILLING</span>
             </span>
             <span className="text-slate-300 hidden sm:inline">|</span>
@@ -99,7 +102,13 @@ export const SiteFooter: React.FC<SiteFooterProps> = ({ variant = 'public', onNa
           {/* Column 1 — BRISK SMART BILLING */}
           <div className="space-y-3 sm:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-2.5">
-              <BrandLogo size="sm" />
+              <div className="w-9 h-9 rounded-xl overflow-hidden bg-blue-600 shrink-0 shadow-md shadow-blue-500/20">
+                <img
+                  src="/apple-touch-icon.png"
+                  alt="BRISK SMART BILLING"
+                  className="w-full h-full object-cover"
+                />
+              </div>
               <div>
                 <span className="text-base font-extrabold tracking-tight text-white block">BRISK SMART BILLING</span>
                 <span className="text-[10px] text-blue-400 font-medium tracking-wide uppercase block -mt-0.5">

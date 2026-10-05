@@ -199,7 +199,7 @@ Return a JSON array of objects with the following properties:
 - fractional_quantity_allowed: boolean (true if sold by weight like kg/g or volume like L/ml)`;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3.8-flash',
+        model: 'gemini-2.5-flash',
         contents: prompt,
         config: {
           responseMimeType: 'application/json',
@@ -284,7 +284,7 @@ Return a JSON object with:
 - profitabilityScore: number (1 to 100)`;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3.8-flash',
+        model: 'gemini-2.5-flash',
         contents: prompt,
         config: {
           responseMimeType: 'application/json',
@@ -351,7 +351,7 @@ export async function chatWithAIAssistant(
   if (ai) {
     try {
       const response = await ai.models.generateContent({
-        model: 'gemini-3.8-flash',
+        model: 'gemini-2.5-flash',
         contents: message,
         config: {
           systemInstruction: `You are BRISK AI, an expert Kenyan retail assistant for "${businessContext.businessName}".
@@ -402,7 +402,7 @@ Notes: ${params.extraNotes || ''}
 Return only the plain text message, no quotes, no commentary.`;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3.8-flash',
+        model: 'gemini-2.5-flash',
         contents: prompt,
       });
 

@@ -168,7 +168,7 @@ export const CustomerPayPage: React.FC<CustomerPayPageProps> = ({ token }) => {
           <div className="flex items-center justify-center gap-2 mb-2">
             <div className="w-8 h-8 rounded-xl overflow-hidden bg-blue-600 shrink-0 shadow-md">
               <img
-                src="/logo.png"
+                src="/apple-touch-icon.png"
                 alt="BRISK SMART BILLING"
                 className="w-full h-full object-cover"
               />
@@ -300,7 +300,7 @@ export const CustomerPayPage: React.FC<CustomerPayPageProps> = ({ token }) => {
         {/* Footer */}
         <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 text-center text-[11px] text-slate-500 flex items-center justify-center gap-1.5">
           <img
-            src="/logo.png"
+            src="/apple-touch-icon.png"
             alt="Logo"
             className="w-4 h-4 rounded object-cover shadow-2xs shrink-0"
           />

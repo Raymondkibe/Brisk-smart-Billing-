@@ -83,13 +83,26 @@ interface DatabaseSchema {
   receipt_counters: Record<string, number>; // business_id -> sequence count
 }
 
-const DATA_DIR = path.resolve(process.cwd(), '.data');
-const DB_FILE = path.join(DATA_DIR, 'brisk_billing_db.json');
-
-// Ensure data directory exists
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
+function getDatabaseFilePath(): string {
+  try {
+    if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+      return path.join('/tmp', 'brisk_billing_db.json');
+    }
+    const localDir = path.resolve(process.cwd(), '.data');
+    if (!fs.existsSync(localDir)) {
+      try {
+        fs.mkdirSync(localDir, { recursive: true });
+      } catch {
+        return path.join('/tmp', 'brisk_billing_db.json');
+      }
+    }
+    return path.join(localDir, 'brisk_billing_db.json');
+  } catch {
+    return path.join('/tmp', 'brisk_billing_db.json');
+  }
 }
+
+const DB_FILE = getDatabaseFilePath();
 
 export function generateId(prefix: string = ''): string {
   const rand = crypto.randomBytes(6).toString('hex');
@@ -710,9 +723,26 @@ class Database {
   }
 
   private saveData(data: DatabaseSchema): void {
-    const tempFile = `${DB_FILE}.tmp.${Date.now()}`;
-    fs.writeFileSync(tempFile, JSON.stringify(data, null, 2), 'utf-8');
-    fs.renameSync(tempFile, DB_FILE);
+    try {
+      const dir = path.dirname(DB_FILE);
+      if (!fs.existsSync(dir)) {
+        try {
+          fs.mkdirSync(dir, { recursive: true });
+        } catch {
+          // Ignore directory creation errors
+        }
+      }
+      const tempFile = `${DB_FILE}.tmp.${Date.now()}`;
+      fs.writeFileSync(tempFile, JSON.stringify(data, null, 2), 'utf-8');
+      fs.renameSync(tempFile, DB_FILE);
+    } catch {
+      try {
+        const fallbackPath = path.join('/tmp', 'brisk_billing_db.json');
+        fs.writeFileSync(fallbackPath, JSON.stringify(data, null, 2), 'utf-8');
+      } catch {
+        // Safe in-memory persistence fallback
+      }
+    }
   }
 
   public persist(): void {

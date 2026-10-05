@@ -34,10 +34,6 @@ async function startServer() {
   // Mount API endpoints
   app.use('/api', apiRouter);
 
-  // Serve static assets (logos, favicons, and social cards)
-  const publicPath = path.resolve(__dirname, 'public');
-  app.use(express.static(publicPath));
-
   if (!isProduction) {
     // Development mode: Mount Vite dev server middleware
     const { createServer: createViteServer } = await import('vite');

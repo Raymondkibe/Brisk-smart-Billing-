@@ -24,7 +24,6 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { BrandLogo } from './BrandLogo';
 
 interface NavigationProps {
   currentPath: string;
@@ -166,7 +165,16 @@ export const Navigation: React.FC<NavigationProps> = ({ currentPath, onNavigate 
             onClick={() => onNavigate('/')}
             className="text-sm sm:text-base font-bold tracking-tight text-slate-900 hover:text-blue-600 transition-colors flex items-center gap-2 cursor-pointer min-w-0"
           >
-            <BrandLogo size="sm" />
+            <div className="w-8 h-8 rounded-xl bg-blue-600 overflow-hidden shrink-0 shadow-md shadow-blue-500/20">
+              <img
+                src="/favicon_logo_1790884666478.jpg"
+                alt="BRISK SMART BILLING"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
+            </div>
             <span className="truncate max-w-[140px] sm:max-w-none">BRISK SMART BILLING</span>
           </button>
         </div>
@@ -392,7 +400,13 @@ export const Navigation: React.FC<NavigationProps> = ({ currentPath, onNavigate 
           <div className="w-64 bg-white h-full shadow-2xl flex flex-col p-4">
             <div className="flex items-center justify-between pb-4 border-b border-slate-200">
               <div className="flex items-center gap-2">
-                <BrandLogo size="xs" />
+                <div className="w-7 h-7 rounded-lg overflow-hidden bg-blue-600 shrink-0">
+                  <img
+                    src="/favicon_logo_1790884666478.jpg"
+                    alt="Logo"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
                 <span className="font-bold text-xs text-slate-900 truncate">BRISK SMART BILLING</span>
               </div>
               <button onClick={() => setMobileMenuOpen(false)} className="p-1.5 text-slate-500 hover:text-slate-800 rounded-lg cursor-pointer">
