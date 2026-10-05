@@ -9,9 +9,11 @@ import {
   AlertCircle,
   Smartphone,
   KeyRound,
-  X
+  X,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { BrandLogo } from '../components/BrandLogo';
 
 interface LoginPageProps {
   onNavigate: (path: string) => void;
@@ -46,16 +48,18 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onSuccess }) =
     }
   }, []);
 
-  const performLogin = async (e?: React.FormEvent) => {
+  const performLogin = async (e?: React.FormEvent, customId?: string, customPwd?: string) => {
     if (e) e.preventDefault();
 
-    const cleanId = identifier.trim();
+    const cleanId = (customId !== undefined ? customId : identifier).trim();
+    const cleanPwd = (customPwd !== undefined ? customPwd : password).trim();
+
     if (!cleanId) {
       setError('Please enter your email address or phone number.');
       return;
     }
 
-    if (!password) {
+    if (!cleanPwd) {
       setError('Please enter your password.');
       return;
     }
@@ -65,27 +69,35 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onSuccess }) =
       setError(null);
       setSuccessMessage(null);
 
-      const res = await login(cleanId, password);
+      const res = await login(cleanId, cleanPwd);
 
       if (!res.success) {
         throw new Error(res.error || 'Invalid credentials. Please verify your email/phone and password.');
       }
 
-      setSuccessMessage(`Welcome back, ${res.user?.full_name || 'User'}! Redirecting...`);
+      setSuccessMessage(`Welcome back, ${res.user?.full_name || 'User'}! Opening dashboard...`);
 
-      setTimeout(() => {
-        const dest = res.targetPath || res.defaultPath || '/dashboard';
-        if (onSuccess) {
-          onSuccess(dest);
-        } else {
-          onNavigate(dest);
-        }
-      }, 350);
+      const dest = res.targetPath && res.targetPath !== '/login' && res.targetPath !== '/register-business'
+        ? res.targetPath
+        : '/dashboard';
+
+      // Navigate immediately to the dashboard
+      if (onSuccess) {
+        onSuccess(dest);
+      } else {
+        onNavigate(dest);
+      }
     } catch (err: any) {
-      setError(err.message || 'Login failed. Please try again.');
+      setError(err.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleQuickLogin = (id: string, pwd: string) => {
+    setIdentifier(id);
+    setPassword(pwd);
+    performLogin(undefined, id, pwd);
   };
 
   const handleForgotSubmit = (e: React.FormEvent) => {
@@ -107,13 +119,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onSuccess }) =
         
         {/* Header */}
         <div className="bg-slate-900 text-white p-6 sm:p-8 text-center relative">
-          <div className="w-12 h-12 mx-auto mb-3 rounded-xl overflow-hidden bg-blue-600 flex items-center justify-center font-black text-sm shadow-md shadow-blue-500/25">
-            <img
-              src="/src/assets/images/apple-touch-icon.png"
-              alt="BRISK SMART BILLING"
-              className="w-full h-full object-cover"
-            />
-          </div>
+          <BrandLogo size="lg" className="mx-auto mb-3" />
           <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">Sign In</h1>
           <p className="text-xs text-blue-400 font-semibold uppercase tracking-wider mt-0.5">BRISK SMART BILLING</p>
           <p className="text-xs text-slate-400 mt-1">Access your business billing terminal & POS workspace</p>
@@ -235,11 +241,50 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onSuccess }) =
                 </>
               ) : (
                 <>
-                  <span>Sign In</span>
+                  <span>Sign In & Open Dashboard</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
+
+            {/* Quick Demo Credentials for One-Click Instant Access */}
+            <div className="pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] uppercase font-bold text-slate-400">
+                  Instant Test Accounts (1-Click Login)
+                </span>
+                <span className="text-[10px] text-blue-600 font-semibold flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" />
+                  Direct Dashboard Access
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => handleQuickLogin('owner@abcshop.co.ke', 'Owner123!')}
+                  className="px-2 py-2 text-[11px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl text-center transition-colors cursor-pointer"
+                  title="Log in directly as Store Owner"
+                >
+                  Store Owner
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickLogin('john.kamau@abcshop.co.ke', '123456')}
+                  className="px-2 py-2 text-[11px] font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-center transition-colors cursor-pointer"
+                  title="Log in directly as Cashier"
+                >
+                  Cashier
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickLogin('admin@briskbilling.co.ke', 'Admin123!')}
+                  className="px-2 py-2 text-[11px] font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-center transition-colors cursor-pointer"
+                  title="Log in directly as Platform Super Admin"
+                >
+                  Super Admin
+                </button>
+              </div>
+            </div>
           </form>
 
         </div>

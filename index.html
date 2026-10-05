@@ -15,9 +15,11 @@
     <link rel="canonical" href="https://brisksmartbilling.vercel.app/" />
 
     <!-- Favicon & Touch Icons -->
-    <link rel="icon" type="image/x-icon" href="/src/assets/images/favicon.ico" />
-    <link rel="shortcut icon" href="/src/assets/images/favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/src/assets/images/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
     <!-- Open Graph Social Metadata -->
     <meta property="og:type" content="website" />
@@ -27,7 +29,9 @@
       property="og:description"
       content="Manage sales, inventory, M-Pesa, card, and bank transfer payments, digital receipts, worker shifts, and analytics from one unified platform."
     />
-    <meta property="og:image" content="/src/assets/images/og_image_preview.jpg" />
+    <meta property="og:image" content="https://brisksmartbilling.vercel.app/og_image_preview.jpg" />
+    <meta property="og:image:secure_url" content="https://brisksmartbilling.vercel.app/og_image_preview.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="BRISK SMART BILLING — Multi-Business POS & Payment Platform" />
@@ -41,7 +45,23 @@
       name="twitter:description"
       content="Manage sales, inventory, M-Pesa, card, and bank transfer payments, digital receipts, worker shifts, and analytics from one unified platform."
     />
-    <meta name="twitter:image" content="/src/assets/images/og_image_preview.jpg" />
+    <meta name="twitter:image" content="https://brisksmartbilling.vercel.app/og_image_preview.jpg" />
+
+    <script>
+      (function() {
+        try {
+          var origin = window.location.origin;
+          if (origin && origin.indexOf('http') === 0 && !origin.includes('vercel.app')) {
+            var ogImg = document.querySelector('meta[property="og:image"]');
+            if (ogImg) ogImg.setAttribute('content', origin + '/og_image_preview.jpg');
+            var twImg = document.querySelector('meta[name="twitter:image"]');
+            if (twImg) twImg.setAttribute('content', origin + '/og_image_preview.jpg');
+            var ogUrl = document.querySelector('meta[property="og:url"]');
+            if (ogUrl) ogUrl.setAttribute('content', origin + window.location.pathname);
+          }
+        } catch(e) {}
+      })();
+    </script>
 
     <!-- Fonts & Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -81,7 +101,7 @@
         "@type": "Organization",
         "name": "BRISK SMART BILLING",
         "url": "https://brisksmartbilling.vercel.app/",
-        "logo": "https://brisksmartbilling.vercel.app/src/assets/images/apple-touch-icon.png",
+        "logo": "https://brisksmartbilling.vercel.app/logo.png",
         "slogan": "Bill. Pay. Verify. Grow.",
         "contactPoint": [
           {

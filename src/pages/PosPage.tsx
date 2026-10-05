@@ -519,7 +519,7 @@ export const PosPage: React.FC<PosPageProps> = ({ initialCart, onNavigate }) => 
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl overflow-hidden bg-blue-600 shrink-0 shadow-xs">
             <img
-              src="/src/assets/images/apple-touch-icon.png"
+              src="/logo.png"
               alt="Logo"
               className="w-full h-full object-cover"
             />

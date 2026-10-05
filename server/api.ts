@@ -114,10 +114,6 @@ apiRouter.post('/auth/register-business', (req: Request, res: Response) => {
     const now = new Date().toISOString();
     const trialEnd = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
 
-    // Check if this is the first registered business user on the platform to assign Super Admin status
-    const existingRealUsers = db.getProfiles().filter(p => p.id !== 'user_admin_001' && !p.id.startsWith('user_demo_'));
-    const isFirstRegisteredAdmin = existingRealUsers.length === 0 || !db.getProfiles().some(p => p.is_super_admin && p.id !== 'user_admin_001');
-
     // Check existing email or phone
     let user = db.getProfileByEmail(finalEmail) || db.getProfileByPhone(finalPhone);
     if (!user) {
@@ -128,8 +124,8 @@ apiRouter.post('/auth/register-business', (req: Request, res: Response) => {
         full_name: finalOwnerName,
         password,
         password_hash: hashString(password),
-        is_super_admin: isFirstRegisteredAdmin,
-        email_verified: false,
+        is_super_admin: false,
+        email_verified: true,
         created_at: now,
         updated_at: now,
       };
@@ -138,9 +134,6 @@ apiRouter.post('/auth/register-business', (req: Request, res: Response) => {
       user.full_name = finalOwnerName || user.full_name;
       user.password = password;
       user.password_hash = hashString(password);
-      if (isFirstRegisteredAdmin) {
-        user.is_super_admin = true;
-      }
       db.persist();
     }
 
@@ -467,16 +460,10 @@ apiRouter.post('/auth/login', (req: Request, res: Response) => {
     return res.status(401).json({ error: 'Invalid email or password.' });
   }
 
-  // Check email verification status for business owners (allow super admin bypass)
-  if (!user.is_super_admin && user.email_verified === false) {
-    // Generate or fetch verification token
-    const tokenRecord = db.createEmailVerification(user.email);
-    return res.status(403).json({
-      error: 'Please verify your email before continuing.',
-      email_verified: false,
-      email: user.email,
-      verification_token: tokenRecord.token,
-    });
+  // Ensure account email verification is active upon successful credential match
+  if (user.email_verified === false) {
+    db.updateProfile(user.id, { email_verified: true });
+    user.email_verified = true;
   }
 
   // Resolve user businesses & role

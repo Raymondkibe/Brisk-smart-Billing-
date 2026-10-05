@@ -29,14 +29,18 @@ import {
   Zap,
   DollarSign,
   Laptop,
-  ExternalLink
+  ExternalLink,
+  LayoutDashboard
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { BrandLogo } from '../components/BrandLogo';
 
 interface LandingPageProps {
   onNavigate: (path: string) => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
+  const { user } = useAuth();
   // Billing cycle toggle: monthly, quarterly, annual
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'quarterly' | 'annual'>('monthly');
 
@@ -299,12 +303,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
               Enterprise Consultation
             </button>
             <span className="text-slate-700">|</span>
-            <button
-              onClick={() => onNavigate('/login')}
-              className="text-blue-400 hover:text-blue-300 font-semibold transition-colors cursor-pointer"
-            >
-              Merchant Sign In →
-            </button>
+            {user ? (
+              <button
+                onClick={() => onNavigate('/dashboard')}
+                className="text-emerald-400 hover:text-emerald-300 font-bold transition-colors cursor-pointer flex items-center gap-1"
+              >
+                <span>Go to Dashboard ({user.full_name}) →</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => onNavigate('/login')}
+                className="text-blue-400 hover:text-blue-300 font-semibold transition-colors cursor-pointer"
+              >
+                Merchant Sign In →
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -315,13 +328,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
       <section id="hero-section" className="relative overflow-hidden pt-16 pb-20 bg-white border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           
-          {/* Editorial kicker with Logo */}
+          {/* Editorial kicker with BrandLogo */}
           <div className="inline-flex items-center gap-2 text-xs font-semibold text-blue-700 bg-blue-50 px-3.5 py-1.5 rounded-full border border-blue-100 mb-6">
-            <img
-              src="/src/assets/images/apple-touch-icon.png"
-              alt="Logo"
-              className="w-4 h-4 rounded-sm object-cover"
-            />
+            <BrandLogo size="xs" className="w-4 h-4 rounded-xs" />
             <span>BRISK SMART BILLING · Next-Generation Multi-Business POS Infrastructure</span>
           </div>
 
@@ -335,13 +344,32 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
 
           {/* Action CTAs */}
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <button
-              onClick={() => onNavigate('/register-business')}
-              className="w-full sm:w-auto px-7 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm shadow-md shadow-blue-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <span>Start 14-Day Free Trial</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
+            {user ? (
+              <button
+                onClick={() => onNavigate('/dashboard')}
+                className="w-full sm:w-auto px-7 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm shadow-md shadow-blue-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                <span>Go to Workspace Dashboard</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => onNavigate('/register-business')}
+                  className="w-full sm:w-auto px-7 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm shadow-md shadow-blue-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>Start 14-Day Free Trial</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => onNavigate('/login')}
+                  className="w-full sm:w-auto px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-semibold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                >
+                  <span>Sign In to Terminal</span>
+                </button>
+              </>
+            )}
 
             <button
               onClick={() => onNavigate('/sales/new')}

@@ -144,7 +144,7 @@ export const WorkerDashboardPage: React.FC<WorkerDashboardPageProps> = ({ onNavi
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl overflow-hidden bg-blue-600 shrink-0 shadow-md shadow-blue-500/20">
               <img
-                src="/src/assets/images/apple-touch-icon.png"
+                src="/logo.png"
                 alt="BRISK SMART BILLING"
                 className="w-full h-full object-cover"
               />

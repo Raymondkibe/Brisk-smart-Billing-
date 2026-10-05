@@ -9,7 +9,8 @@
       "password_hash": "2bb80e6074900a68d0f191a26d173e13d9418ac6677f98889ff01cf52c4293f9",
       "is_super_admin": true,
       "created_at": "2026-09-30T00:00:00.000Z",
-      "updated_at": "2026-09-30T00:00:00.000Z"
+      "updated_at": "2026-10-05T08:47:17.966Z",
+      "last_login_at": "2026-10-05T08:47:17.966Z"
     },
     {
       "id": "user_owner_001",
@@ -20,7 +21,8 @@
       "password_hash": "43d56f98861e86a8d60c723ad03ac2ff93bbfc3e8a066b9c0423b12960ba6184",
       "email_verified": true,
       "created_at": "2026-10-02T12:09:09.564Z",
-      "updated_at": "2026-10-02T12:09:09.564Z"
+      "updated_at": "2026-10-05T08:53:50.549Z",
+      "last_login_at": "2026-10-05T08:53:50.549Z"
     },
     {
       "id": "user_worker_001",
@@ -31,7 +33,8 @@
       "password_hash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
       "email_verified": true,
       "created_at": "2026-10-02T12:09:09.564Z",
-      "updated_at": "2026-10-02T12:09:09.564Z"
+      "updated_at": "2026-10-05T08:53:50.562Z",
+      "last_login_at": "2026-10-05T08:53:50.562Z"
     },
     {
       "id": "user_manager_001",
@@ -54,6 +57,43 @@
       "email_verified": true,
       "created_at": "2026-10-02T12:09:09.564Z",
       "updated_at": "2026-10-02T12:09:09.564Z"
+    },
+    {
+      "id": "user_96e184e4e5e0",
+      "email": "jane@testmart.com",
+      "phone": "0711998877",
+      "full_name": "Jane Doe",
+      "password": "password123",
+      "password_hash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
+      "is_super_admin": true,
+      "email_verified": false,
+      "created_at": "2026-10-05T08:41:03.163Z",
+      "updated_at": "2026-10-05T08:41:03.198Z",
+      "last_login_at": "2026-10-05T08:41:03.198Z"
+    },
+    {
+      "id": "user_a579179fdac9",
+      "email": "testmerchant1791190045624@example.com",
+      "phone": "0799987480",
+      "full_name": "Test Merchant",
+      "password": "Password123!",
+      "password_hash": "a109e36947ad56de1dca1cc49f0ef8ac9ad9a7b1aa0df41fb3c4cb73c1ff01ea",
+      "is_super_admin": false,
+      "email_verified": false,
+      "created_at": "2026-10-05T08:47:25.737Z",
+      "updated_at": "2026-10-05T08:47:25.737Z"
+    },
+    {
+      "id": "user_83f2b53248f7",
+      "email": "alice1791190430566@example.com",
+      "phone": "0711853473",
+      "full_name": "Alice Mwangi",
+      "password": "Password123!",
+      "password_hash": "a109e36947ad56de1dca1cc49f0ef8ac9ad9a7b1aa0df41fb3c4cb73c1ff01ea",
+      "is_super_admin": false,
+      "email_verified": true,
+      "created_at": "2026-10-05T08:53:50.571Z",
+      "updated_at": "2026-10-05T08:53:50.571Z"
     }
   ],
   "businesses": [
@@ -75,6 +115,54 @@
       "prices_include_vat": true,
       "created_at": "2026-10-02T12:09:09.564Z",
       "updated_at": "2026-10-02T12:09:09.564Z"
+    },
+    {
+      "id": "biz_59d3bf1ffb70",
+      "owner_id": "user_96e184e4e5e0",
+      "name": "Jane Retail Mart",
+      "slug": "jane-retail-mart-509",
+      "category": "Retail & Supermarket",
+      "phone": "0711998877",
+      "email": "jane@testmart.com",
+      "location": "Nairobi, Kenya",
+      "currency": "KES",
+      "status": "active",
+      "receipt_footer": "Thank you for shopping with Jane Retail Mart! Powered by BRISK SMART BILLING.",
+      "tax_percentage": 0,
+      "created_at": "2026-10-05T08:41:03.163Z",
+      "updated_at": "2026-10-05T08:41:03.163Z"
+    },
+    {
+      "id": "biz_8009fbc07c1d",
+      "owner_id": "user_a579179fdac9",
+      "name": "Apex Mart Test",
+      "slug": "apex-mart-test-904",
+      "category": "Retail & Supermarket",
+      "phone": "0799987480",
+      "email": "testmerchant1791190045624@example.com",
+      "location": "Nairobi, Kenya",
+      "currency": "KES",
+      "status": "active",
+      "receipt_footer": "Thank you for shopping with Apex Mart Test! Powered by BRISK SMART BILLING.",
+      "tax_percentage": 0,
+      "created_at": "2026-10-05T08:47:25.737Z",
+      "updated_at": "2026-10-05T08:47:25.737Z"
+    },
+    {
+      "id": "biz_3d646fee2877",
+      "owner_id": "user_83f2b53248f7",
+      "name": "Fresh Grocers 136",
+      "slug": "fresh-grocers-136-157",
+      "category": "Grocery & Fresh Produce",
+      "phone": "0711853473",
+      "email": "alice1791190430566@example.com",
+      "location": "Nairobi, Kenya",
+      "currency": "KES",
+      "status": "active",
+      "receipt_footer": "Thank you for shopping with Fresh Grocers 136! Powered by BRISK SMART BILLING.",
+      "tax_percentage": 0,
+      "created_at": "2026-10-05T08:53:50.571Z",
+      "updated_at": "2026-10-05T08:53:50.571Z"
     }
   ],
   "business_members": [
@@ -168,6 +256,69 @@
       },
       "created_at": "2026-10-02T12:09:09.564Z",
       "updated_at": "2026-10-02T12:09:09.564Z"
+    },
+    {
+      "id": "mem_352ffd9ab554",
+      "business_id": "biz_59d3bf1ffb70",
+      "user_id": "user_96e184e4e5e0",
+      "role": "owner",
+      "status": "active",
+      "permissions": {
+        "can_create_sales": true,
+        "can_apply_discount": true,
+        "max_discount_percent": 100,
+        "can_manage_products": true,
+        "can_manage_inventory": true,
+        "can_manage_workers": true,
+        "can_view_reports": true,
+        "can_configure_mpesa": true,
+        "can_manage_subscription": true,
+        "can_issue_refunds": true
+      },
+      "created_at": "2026-10-05T08:41:03.163Z",
+      "updated_at": "2026-10-05T08:41:03.163Z"
+    },
+    {
+      "id": "mem_ad13e2ff2eef",
+      "business_id": "biz_8009fbc07c1d",
+      "user_id": "user_a579179fdac9",
+      "role": "owner",
+      "status": "active",
+      "permissions": {
+        "can_create_sales": true,
+        "can_apply_discount": true,
+        "max_discount_percent": 100,
+        "can_manage_products": true,
+        "can_manage_inventory": true,
+        "can_manage_workers": true,
+        "can_view_reports": true,
+        "can_configure_mpesa": true,
+        "can_manage_subscription": true,
+        "can_issue_refunds": true
+      },
+      "created_at": "2026-10-05T08:47:25.737Z",
+      "updated_at": "2026-10-05T08:47:25.737Z"
+    },
+    {
+      "id": "mem_c88f51c0f8e6",
+      "business_id": "biz_3d646fee2877",
+      "user_id": "user_83f2b53248f7",
+      "role": "owner",
+      "status": "active",
+      "permissions": {
+        "can_create_sales": true,
+        "can_apply_discount": true,
+        "max_discount_percent": 100,
+        "can_manage_products": true,
+        "can_manage_inventory": true,
+        "can_manage_workers": true,
+        "can_view_reports": true,
+        "can_configure_mpesa": true,
+        "can_manage_subscription": true,
+        "can_issue_refunds": true
+      },
+      "created_at": "2026-10-05T08:53:50.571Z",
+      "updated_at": "2026-10-05T08:53:50.571Z"
     }
   ],
   "subscription_plans": [
@@ -275,6 +426,45 @@
       "days_remaining": 14,
       "created_at": "2026-10-02T12:09:09.564Z",
       "updated_at": "2026-10-02T12:09:09.564Z"
+    },
+    {
+      "id": "sub_30662a224544",
+      "business_id": "biz_59d3bf1ffb70",
+      "plan_id": "plan_standard",
+      "plan_name": "Standard (14-Day Free Trial)",
+      "status": "trial",
+      "trial_started_at": "2026-10-05T08:41:03.163Z",
+      "trial_ends_at": "2026-10-19T08:41:03.163Z",
+      "ends_at": "2026-10-19T08:41:03.163Z",
+      "days_remaining": 14,
+      "created_at": "2026-10-05T08:41:03.163Z",
+      "updated_at": "2026-10-05T08:41:03.163Z"
+    },
+    {
+      "id": "sub_bd5aa700d1b6",
+      "business_id": "biz_8009fbc07c1d",
+      "plan_id": "plan_standard",
+      "plan_name": "Standard (14-Day Free Trial)",
+      "status": "trial",
+      "trial_started_at": "2026-10-05T08:47:25.737Z",
+      "trial_ends_at": "2026-10-19T08:47:25.737Z",
+      "ends_at": "2026-10-19T08:47:25.737Z",
+      "days_remaining": 14,
+      "created_at": "2026-10-05T08:47:25.737Z",
+      "updated_at": "2026-10-05T08:47:25.737Z"
+    },
+    {
+      "id": "sub_a1aefcb37b6d",
+      "business_id": "biz_3d646fee2877",
+      "plan_id": "plan_standard",
+      "plan_name": "Standard (14-Day Free Trial)",
+      "status": "trial",
+      "trial_started_at": "2026-10-05T08:53:50.571Z",
+      "trial_ends_at": "2026-10-19T08:53:50.571Z",
+      "ends_at": "2026-10-19T08:53:50.571Z",
+      "days_remaining": 14,
+      "created_at": "2026-10-05T08:53:50.571Z",
+      "updated_at": "2026-10-05T08:53:50.571Z"
     }
   ],
   "categories": [
@@ -289,6 +479,24 @@
       "business_id": "biz_abc_shop_001",
       "name": "Bakery & Bread",
       "created_at": "2026-10-02T12:09:09.564Z"
+    },
+    {
+      "id": "cat_dd70fad5da30",
+      "business_id": "biz_59d3bf1ffb70",
+      "name": "General Merchandise",
+      "created_at": "2026-10-05T08:41:03.166Z"
+    },
+    {
+      "id": "cat_ad64d8f8ec7c",
+      "business_id": "biz_8009fbc07c1d",
+      "name": "General Merchandise",
+      "created_at": "2026-10-05T08:47:25.740Z"
+    },
+    {
+      "id": "cat_8df2d93d32e1",
+      "business_id": "biz_3d646fee2877",
+      "name": "General Merchandise",
+      "created_at": "2026-10-05T08:53:50.577Z"
     }
   ],
   "products": [
@@ -642,6 +850,39 @@
       "active": true,
       "has_credentials": true,
       "updated_at": "2026-10-02T12:09:09.564Z"
+    },
+    {
+      "id": "mpesa_cfg_b93f7b15900d",
+      "business_id": "biz_59d3bf1ffb70",
+      "environment": "test",
+      "consumer_key_masked": "••••••••••••4379",
+      "shortcode": "174379",
+      "passkey_masked": "••••••••••••bfb2",
+      "active": true,
+      "has_credentials": true,
+      "updated_at": "2026-10-05T08:41:03.167Z"
+    },
+    {
+      "id": "mpesa_cfg_b61f03e55295",
+      "business_id": "biz_8009fbc07c1d",
+      "environment": "test",
+      "consumer_key_masked": "••••••••••••4379",
+      "shortcode": "174379",
+      "passkey_masked": "••••••••••••bfb2",
+      "active": true,
+      "has_credentials": true,
+      "updated_at": "2026-10-05T08:47:25.740Z"
+    },
+    {
+      "id": "mpesa_cfg_c6cf9c87d07b",
+      "business_id": "biz_3d646fee2877",
+      "environment": "test",
+      "consumer_key_masked": "••••••••••••4379",
+      "shortcode": "174379",
+      "passkey_masked": "••••••••••••bfb2",
+      "active": true,
+      "has_credentials": true,
+      "updated_at": "2026-10-05T08:53:50.578Z"
     }
   ],
   "mpesa_callbacks": [],
@@ -684,6 +925,100 @@
       },
       "id": "log_7cb65df6d9b9",
       "created_at": "2026-10-04T12:23:35.973Z"
+    },
+    {
+      "business_id": "biz_59d3bf1ffb70",
+      "user_id": "user_96e184e4e5e0",
+      "user_name": "Jane Doe",
+      "action": "business_registered",
+      "resource_type": "business",
+      "resource_id": "biz_59d3bf1ffb70",
+      "metadata": {
+        "businessName": "Jane Retail Mart",
+        "category": "Retail & Supermarket"
+      },
+      "id": "log_53ee109d9140",
+      "created_at": "2026-10-05T08:41:03.168Z"
+    },
+    {
+      "business_id": "biz_59d3bf1ffb70",
+      "user_id": "user_96e184e4e5e0",
+      "user_name": "Jane Doe",
+      "action": "user_login",
+      "resource_type": "auth",
+      "resource_id": "user_96e184e4e5e0",
+      "metadata": {
+        "role": "super_admin"
+      },
+      "id": "log_2984bc546d23",
+      "created_at": "2026-10-05T08:41:03.200Z"
+    },
+    {
+      "business_id": "biz_abc_shop_001",
+      "user_id": "user_owner_001",
+      "user_name": "David Mwangi",
+      "action": "user_login",
+      "resource_type": "auth",
+      "resource_id": "user_owner_001",
+      "metadata": {
+        "role": "owner"
+      },
+      "id": "log_8dfbb3111181",
+      "created_at": "2026-10-05T08:47:22.263Z"
+    },
+    {
+      "business_id": "biz_8009fbc07c1d",
+      "user_id": "user_a579179fdac9",
+      "user_name": "Test Merchant",
+      "action": "business_registered",
+      "resource_type": "business",
+      "resource_id": "biz_8009fbc07c1d",
+      "metadata": {
+        "businessName": "Apex Mart Test",
+        "category": "Retail & Supermarket"
+      },
+      "id": "log_73e32148b2e4",
+      "created_at": "2026-10-05T08:47:25.740Z"
+    },
+    {
+      "business_id": "biz_abc_shop_001",
+      "user_id": "user_owner_001",
+      "user_name": "David Mwangi",
+      "action": "user_login",
+      "resource_type": "auth",
+      "resource_id": "user_owner_001",
+      "metadata": {
+        "role": "owner"
+      },
+      "id": "log_23cfb2aaefe3",
+      "created_at": "2026-10-05T08:53:50.550Z"
+    },
+    {
+      "business_id": "biz_abc_shop_001",
+      "user_id": "user_worker_001",
+      "user_name": "John Kamau",
+      "action": "user_login",
+      "resource_type": "auth",
+      "resource_id": "user_worker_001",
+      "metadata": {
+        "role": "cashier"
+      },
+      "id": "log_4297ed042541",
+      "created_at": "2026-10-05T08:53:50.563Z"
+    },
+    {
+      "business_id": "biz_3d646fee2877",
+      "user_id": "user_83f2b53248f7",
+      "user_name": "Alice Mwangi",
+      "action": "business_registered",
+      "resource_type": "business",
+      "resource_id": "biz_3d646fee2877",
+      "metadata": {
+        "businessName": "Fresh Grocers 136",
+        "category": "Grocery & Fresh Produce"
+      },
+      "id": "log_a704c54d36e1",
+      "created_at": "2026-10-05T08:53:50.579Z"
     }
   ],
   "support_tickets": [
@@ -703,7 +1038,10 @@
     }
   ],
   "receipt_counters": {
-    "biz_abc_shop_001": 125
+    "biz_abc_shop_001": 125,
+    "biz_59d3bf1ffb70": 0,
+    "biz_8009fbc07c1d": 0,
+    "biz_3d646fee2877": 0
   },
   "brands": [
     {
@@ -761,10 +1099,100 @@
       "delivered_at": "2026-10-04T12:23:35.976Z"
     }
   ],
-  "email_verifications": [],
+  "email_verifications": [
+    {
+      "id": "evt_c30de986989e",
+      "email": "jane@testmart.com",
+      "token": "640154dd1b5fb3503b106accf8eff21af7d2b13ebdab66c6",
+      "verified": false,
+      "created_at": "2026-10-05T08:41:03.164Z",
+      "expires_at": "2026-10-06T08:41:03.164Z",
+      "last_sent_at": "2026-10-05T08:41:03.164Z"
+    },
+    {
+      "id": "evt_21bd9e2d30e3",
+      "email": "testmerchant1791190045624@example.com",
+      "token": "2aea5b4e56e56b10db0f4fbcac70fa29e62dd90282cc91c3",
+      "verified": false,
+      "created_at": "2026-10-05T08:47:25.738Z",
+      "expires_at": "2026-10-06T08:47:25.738Z",
+      "last_sent_at": "2026-10-05T08:47:25.738Z"
+    },
+    {
+      "id": "evt_640096abb4b9",
+      "email": "alice1791190430566@example.com",
+      "token": "c819f5d3cb9785d52efc8b1d5e9fd6b4c4d47906eb590cae",
+      "verified": false,
+      "created_at": "2026-10-05T08:53:50.573Z",
+      "expires_at": "2026-10-06T08:53:50.573Z",
+      "last_sent_at": "2026-10-05T08:53:50.573Z"
+    }
+  ],
   "password_resets": [],
   "worker_invitations": [],
-  "login_activities": [],
+  "login_activities": [
+    {
+      "id": "lac_b0b0872defae",
+      "user_id": "user_worker_001",
+      "email": "john.kamau@abcshop.co.ke",
+      "status": "success",
+      "role": "cashier",
+      "timestamp": "2026-10-05T08:53:50.562Z"
+    },
+    {
+      "id": "lac_4b64879c4057",
+      "user_id": "user_owner_001",
+      "email": "owner@abcshop.co.ke",
+      "status": "success",
+      "role": "owner",
+      "timestamp": "2026-10-05T08:53:50.550Z"
+    },
+    {
+      "id": "lac_7d4c934bda45",
+      "user_id": "user_owner_001",
+      "email": "owner@abcshop.co.ke",
+      "status": "success",
+      "role": "owner",
+      "timestamp": "2026-10-05T08:47:22.262Z"
+    },
+    {
+      "id": "lac_b18a6bfffdb7",
+      "user_id": "user_admin_001",
+      "email": "admin@briskbilling.co.ke",
+      "status": "success",
+      "role": "super_admin",
+      "timestamp": "2026-10-05T08:47:17.966Z"
+    },
+    {
+      "id": "lac_154fb30c2762",
+      "user_id": "unknown",
+      "email": "admin@brisksmartbilling.com",
+      "status": "failed",
+      "timestamp": "2026-10-05T08:46:54.779Z"
+    },
+    {
+      "id": "lac_6e838d79e5c4",
+      "user_id": "user_96e184e4e5e0",
+      "email": "jane@testmart.com",
+      "status": "success",
+      "role": "super_admin",
+      "timestamp": "2026-10-05T08:41:03.199Z"
+    },
+    {
+      "id": "lac_a11946589206",
+      "user_id": "user_owner_001",
+      "email": "owner@abcshop.co.ke",
+      "status": "failed",
+      "timestamp": "2026-10-05T08:40:50.949Z"
+    },
+    {
+      "id": "lac_50facd2d773a",
+      "user_id": "unknown",
+      "email": "admin@brisksmartbilling.com",
+      "status": "failed",
+      "timestamp": "2026-10-05T08:40:50.947Z"
+    }
+  ],
   "contact_messages": [
     {
       "name": "Jane Mwangi",
