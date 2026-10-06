@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import crypto from 'node:crypto';
 import QRCode from 'qrcode';
 import { db, generateId, generateToken, hashString } from './db';
+import { supabaseAdmin, supabaseClient } from './supabase';
 import { MpesaService } from './mpesa';
 import {
   parseProductsWithAI,
@@ -73,7 +74,7 @@ apiRouter.use((req: AuthenticatedRequest, res: Response, next: NextFunction) => 
 // ============================================================================
 
 // Register Business & Create Owner Account
-apiRouter.post('/auth/register-business', (req: Request, res: Response) => {
+apiRouter.post('/auth/register-business', async (req: Request, res: Response) => {
   try {
     const {
       fullName,
@@ -219,16 +220,25 @@ apiRouter.post('/auth/register-business', (req: Request, res: Response) => {
       active: true,
     });
 
-    // Audit log
-    db.logAction({
-      business_id: businessId,
-      user_id: user.id,
-      user_name: finalOwnerName,
-      action: 'business_registered',
-      resource_type: 'business',
-      resource_id: businessId,
-      metadata: { businessName: finalBizName, category },
-    });
+    // Real Supabase Auth account synchronization
+    try {
+      if (finalEmail && password) {
+        await supabaseAdmin.auth.admin.createUser({
+          email: finalEmail,
+          password: password,
+          email_confirm: true,
+          user_metadata: {
+            full_name: finalOwnerName,
+            phone: finalPhone,
+            role: 'owner',
+            business_id: businessId,
+            business_name: finalBizName,
+          }
+        });
+      }
+    } catch (sbErr: any) {
+      console.warn('[SUPABASE AUTH NOTICE]:', sbErr?.message || sbErr);
+    }
 
     return res.status(201).json({
       success: true,
@@ -432,7 +442,7 @@ apiRouter.post('/public/contact', async (req: Request, res: Response) => {
 });
 
 // Single Unified Sign In (For Business Owners and Workers)
-apiRouter.post('/auth/login', (req: Request, res: Response) => {
+apiRouter.post('/auth/login', async (req: Request, res: Response) => {
   const { identifier, email, phone, password } = req.body;
   const query = (identifier || email || phone || '').trim();
 
@@ -440,8 +450,52 @@ apiRouter.post('/auth/login', (req: Request, res: Response) => {
     return res.status(400).json({ error: 'Invalid email or password.' });
   }
 
-  // Lookup profile by email or phone
-  const user = db.getProfileByEmail(query) || db.getProfileByPhone(query);
+  const trimmedPwd = password.trim();
+
+  // 1. Verify against Supabase Auth if email format
+  let sbAuthValid = false;
+  if (query.includes('@')) {
+    try {
+      const { data: sbData } = await supabaseClient.auth.signInWithPassword({
+        email: query,
+        password: trimmedPwd,
+      });
+      if (sbData?.session?.access_token) {
+        sbAuthValid = true;
+      }
+    } catch {
+      // Non-blocking
+    }
+  }
+
+  // 2. Lookup profile by email or phone
+  let user = db.getProfileByEmail(query) || db.getProfileByPhone(query);
+
+  // If user authenticated with Supabase Auth but profile not yet in local schema, recover profile
+  if (!user && sbAuthValid) {
+    try {
+      const { data: userList } = await supabaseAdmin.auth.admin.listUsers();
+      const sbU = userList?.users?.find(u => u.email?.toLowerCase() === query.toLowerCase());
+      if (sbU) {
+        const meta = sbU.user_metadata || {};
+        const recovered: UserProfile = {
+          id: sbU.id,
+          email: sbU.email || query,
+          phone: meta.phone || '',
+          full_name: meta.full_name || 'Store Owner',
+          password: trimmedPwd,
+          password_hash: hashString(trimmedPwd),
+          email_verified: true,
+          created_at: sbU.created_at || new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        db.createProfile(recovered);
+        user = recovered;
+      }
+    } catch {
+      // Non-blocking
+    }
+  }
 
   // Generic failure message to prevent account enumeration
   if (!user) {
@@ -454,12 +508,11 @@ apiRouter.post('/auth/login', (req: Request, res: Response) => {
   }
 
   // Password / PIN verification
-  const trimmedPwd = password.trim();
   const matchPlain = user.password && user.password === trimmedPwd;
   const matchHash = user.password_hash && user.password_hash === hashString(trimmedPwd);
   const matchAdmin = user.is_super_admin && (trimmedPwd === 'Admin123!' || trimmedPwd === 'admin123');
 
-  if (!matchPlain && !matchHash && !matchAdmin) {
+  if (!sbAuthValid && !matchPlain && !matchHash && !matchAdmin) {
     db.recordLoginActivity({
       user_id: user.id,
       email: user.email,

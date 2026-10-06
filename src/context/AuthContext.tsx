@@ -129,31 +129,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      const res = await fetch(`/api/auth/me?user_id=${storedUserId}&business_id=${storedBizId}`, {
-        headers: {
-          'x-user-id': storedUserId,
-          'x-business-id': storedBizId,
+      // Check if we have cached local session
+      const cachedUserStr = localStorage.getItem('brisk_cached_user');
+      const cachedBizStr = localStorage.getItem('brisk_cached_biz');
+      if (cachedUserStr && cachedBizStr) {
+        try {
+          const cu = JSON.parse(cachedUserStr);
+          const cb = JSON.parse(cachedBizStr);
+          if (cu?.id === storedUserId) {
+            setUser(cu);
+            setBusinesses([cb]);
+            setActiveBusiness(cb);
+          }
+        } catch {
+          // Ignore parse errors
         }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setUser(data.user);
-        setBusinesses(data.businesses || []);
-        setActiveBusiness(data.activeBusiness || null);
-        setMember(data.member || null);
-        setSubscription(data.subscription || null);
+      }
 
-        if (data.user?.id) localStorage.setItem('brisk_user_id', data.user.id);
-        if (data.activeBusiness?.id) {
-          localStorage.setItem('brisk_biz_id', data.activeBusiness.id);
-        } else {
+      try {
+        const res = await fetch(`/api/auth/me?user_id=${storedUserId}&business_id=${storedBizId}`, {
+          headers: {
+            'x-user-id': storedUserId,
+            'x-business-id': storedBizId,
+          }
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.user) {
+            setUser(data.user);
+            setBusinesses(data.businesses || []);
+            setActiveBusiness(data.activeBusiness || null);
+            setMember(data.member || null);
+            setSubscription(data.subscription || null);
+
+            localStorage.setItem('brisk_user_id', data.user.id);
+            localStorage.setItem('brisk_cached_user', JSON.stringify(data.user));
+            if (data.activeBusiness?.id) {
+              localStorage.setItem('brisk_biz_id', data.activeBusiness.id);
+              localStorage.setItem('brisk_cached_biz', JSON.stringify(data.activeBusiness));
+            }
+          }
+        } else if (res.status === 401) {
+          // Explicitly unauthorized session
+          localStorage.removeItem('brisk_user_id');
           localStorage.removeItem('brisk_biz_id');
+          localStorage.removeItem('brisk_cached_user');
+          localStorage.removeItem('brisk_cached_biz');
+          setUser(null);
         }
-      } else {
-        // Invalid session
-        localStorage.removeItem('brisk_user_id');
-        localStorage.removeItem('brisk_biz_id');
-        setUser(null);
+      } catch (networkErr) {
+        // Network or serverless cold start: keep cached session intact
+        console.warn('API unreachable, using persistent session:', networkErr);
       }
     } catch (err) {
       console.error('Failed to load auth state:', err);
@@ -185,16 +212,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const login = async (identifier: string, password?: string) => {
-    setLoading(true);
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifier, password }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Authentication failed');
+
+      const text = await res.text();
+      let data: any = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = { error: text || 'Invalid server response' };
+      }
+
+      if (!res.ok || !data?.user) {
+        return {
+          success: false,
+          error: data?.error || 'Invalid credentials. Please verify your email/phone and password.',
+        };
       }
 
       setUser(data.user);
@@ -203,8 +240,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setMember(data.member || null);
       setSubscription(data.subscription || null);
 
-      if (data.user?.id) localStorage.setItem('brisk_user_id', data.user.id);
-      if (data.activeBusiness?.id) localStorage.setItem('brisk_biz_id', data.activeBusiness.id);
+      if (data.user?.id) {
+        localStorage.setItem('brisk_user_id', data.user.id);
+        localStorage.setItem('brisk_cached_user', JSON.stringify(data.user));
+      }
+      if (data.activeBusiness?.id) {
+        localStorage.setItem('brisk_biz_id', data.activeBusiness.id);
+        localStorage.setItem('brisk_cached_biz', JSON.stringify(data.activeBusiness));
+      }
 
       const dynamicRole =
         data.role ||
@@ -218,7 +261,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ? '/admin'
           : '/dashboard';
 
-      // Check if user had a previous requested path in session storage
       const savedRedirect = getAndClearRedirectPath();
       const targetPath = savedRedirect || defaultPath;
 
@@ -230,23 +272,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         targetPath,
       };
     } catch (err: any) {
-      return { success: false, error: err.message };
-    } finally {
-      setLoading(false);
+      return { success: false, error: err.message || 'Login failed. Please verify network connection.' };
     }
   };
 
   const registerBusiness = async (payload: any) => {
-    setLoading(true);
     try {
       const res = await fetch('/api/auth/register-business', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Registration failed');
+
+      const text = await res.text();
+      let data: any = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = { error: text || 'Invalid server response' };
+      }
+
+      if (!res.ok || !data?.user) {
+        return {
+          success: false,
+          error: data?.error || 'Registration failed. Please check your information and try again.',
+        };
       }
 
       setUser(data.user);
@@ -257,8 +307,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setMember(data.member || null);
       setSubscription(data.subscription || null);
 
-      if (data.user?.id) localStorage.setItem('brisk_user_id', data.user.id);
-      if (activeBiz?.id) localStorage.setItem('brisk_biz_id', activeBiz.id);
+      if (data.user?.id) {
+        localStorage.setItem('brisk_user_id', data.user.id);
+        localStorage.setItem('brisk_cached_user', JSON.stringify(data.user));
+      }
+      if (activeBiz?.id) {
+        localStorage.setItem('brisk_biz_id', activeBiz.id);
+        localStorage.setItem('brisk_cached_biz', JSON.stringify(activeBiz));
+      }
 
       const savedRedirect = getAndClearRedirectPath();
       const targetPath = savedRedirect || '/dashboard';
@@ -272,15 +328,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         targetPath,
       };
     } catch (err: any) {
-      return { success: false, error: err.message };
-    } finally {
-      setLoading(false);
+      return { success: false, error: err.message || 'Registration failed. Please verify network connection.' };
     }
   };
 
   const logout = () => {
     localStorage.removeItem('brisk_user_id');
     localStorage.removeItem('brisk_biz_id');
+    localStorage.removeItem('brisk_cached_user');
+    localStorage.removeItem('brisk_cached_biz');
     try {
       sessionStorage.removeItem(REDIRECT_STORAGE_KEY);
     } catch {

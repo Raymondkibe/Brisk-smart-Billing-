@@ -68,10 +68,10 @@ function useRouter() {
   }, []);
 
   // State-driven navigate function
-  const navigate = useCallback((targetPath: string, options?: { replace?: boolean }) => {
+  const navigate = useCallback((targetPath: string, options?: { replace?: boolean; force?: boolean }) => {
     if (!targetPath) return;
 
-    if (targetPath === currentUrl) {
+    if (targetPath === currentUrl && !options?.force) {
       window.scrollTo(0, 0);
       return;
     }
@@ -88,7 +88,7 @@ function useRouter() {
 
     const timer = setTimeout(() => {
       setIsTransitioning(false);
-    }, 180);
+    }, 100);
 
     return () => clearTimeout(timer);
   }, [currentUrl]);
@@ -111,15 +111,25 @@ function AppContent() {
     isSuperAdmin,
     getDefaultPath,
     saveRedirectPath,
+    getAndClearRedirectPath,
   } = useAuth();
 
   const { currentUrl, cleanPath, isTransitioning, navigate } = useRouter();
 
-  // Determine if the current route is publicly accessible
+  // Automatic immediate transition: If user session is established while on /login or /register-business,
+  // immediately route to dashboard without stalling.
+  useEffect(() => {
+    if (!loading && user && (cleanPath === '/login' || cleanPath === '/register-business')) {
+      const dest = getAndClearRedirectPath() || getDefaultPath();
+      navigate(dest, { replace: true, force: true });
+    }
+  }, [loading, user, cleanPath, getDefaultPath, getAndClearRedirectPath, navigate]);
+
+  // Determine if the current route is publicly accessible (if authenticated, login/register routes transition to app)
   const isPublicRoute =
     cleanPath === '/' ||
-    cleanPath === '/login' ||
-    cleanPath === '/register-business' ||
+    (!user && cleanPath === '/login') ||
+    (!user && cleanPath === '/register-business') ||
     cleanPath === '/onboarding' ||
     cleanPath === '/contact' ||
     cleanPath.startsWith('/pay/') ||

@@ -72,9 +72,7 @@ export const RegisterBusinessPage: React.FC<RegisterBusinessPageProps> = ({ onSu
       }
 
       setSuccess(true);
-      setTimeout(() => {
-        onSuccess();
-      }, 500);
+      onSuccess();
     } catch (err: any) {
       setError(err.message || 'Registration failed');
     } finally {

@@ -9,7 +9,8 @@
       "password_hash": "2bb80e6074900a68d0f191a26d173e13d9418ac6677f98889ff01cf52c4293f9",
       "is_super_admin": true,
       "created_at": "2026-09-30T00:00:00.000Z",
-      "updated_at": "2026-09-30T00:00:00.000Z"
+      "updated_at": "2026-10-06T14:06:38.626Z",
+      "last_login_at": "2026-10-06T14:06:38.626Z"
     },
     {
       "id": "user_owner_001",
@@ -67,6 +68,32 @@
       "created_at": "2026-10-05T09:55:32.134Z",
       "updated_at": "2026-10-05T09:55:32.171Z",
       "last_login_at": "2026-10-05T09:55:32.171Z"
+    },
+    {
+      "id": "user_aa63d88f47d9",
+      "email": "testowner_1791295591404@briskshop.co.ke",
+      "phone": "0712334455",
+      "full_name": "Faith Wanjiku",
+      "password": "mypassword123",
+      "password_hash": "6e659deaa85842cdabb5c6305fcc40033ba43772ec00d45c2a3c921741a5e377",
+      "is_super_admin": false,
+      "email_verified": true,
+      "created_at": "2026-10-06T14:06:31.584Z",
+      "updated_at": "2026-10-06T14:06:31.615Z",
+      "last_login_at": "2026-10-06T14:06:31.615Z"
+    },
+    {
+      "id": "user_22b0bcc51e1c",
+      "email": "realstore_1791296546774@briskbilling.co.ke",
+      "phone": "0722889900",
+      "full_name": "James Kariuki",
+      "password": "Password2026!",
+      "password_hash": "36090c71c24a8ecd0a6f727fe3b826ad4eb92e222e9b29b72420a26e19400907",
+      "is_super_admin": false,
+      "email_verified": true,
+      "created_at": "2026-10-06T14:22:26.828Z",
+      "updated_at": "2026-10-06T14:22:27.652Z",
+      "last_login_at": "2026-10-06T14:22:27.652Z"
     }
   ],
   "businesses": [
@@ -104,6 +131,38 @@
       "tax_percentage": 0,
       "created_at": "2026-10-05T09:55:32.134Z",
       "updated_at": "2026-10-05T09:55:32.134Z"
+    },
+    {
+      "id": "biz_861d4e893cd3",
+      "owner_id": "user_aa63d88f47d9",
+      "name": "Nairobi Fresh Mart",
+      "slug": "nairobi-fresh-mart-956",
+      "category": "Retail & Supermarket",
+      "phone": "0712334455",
+      "email": "testowner_1791295591404@briskshop.co.ke",
+      "location": "Nairobi, Kenya",
+      "currency": "KES",
+      "status": "active",
+      "receipt_footer": "Thank you for shopping with Nairobi Fresh Mart! Powered by BRISK SMART BILLING.",
+      "tax_percentage": 0,
+      "created_at": "2026-10-06T14:06:31.584Z",
+      "updated_at": "2026-10-06T14:06:31.584Z"
+    },
+    {
+      "id": "biz_338a3d4a5260",
+      "owner_id": "user_22b0bcc51e1c",
+      "name": "Highland Wholesalers",
+      "slug": "highland-wholesalers-185",
+      "category": "Wholesale & Distribution",
+      "phone": "0722889900",
+      "email": "realstore_1791296546774@briskbilling.co.ke",
+      "location": "Nairobi, Kenya",
+      "currency": "KES",
+      "status": "active",
+      "receipt_footer": "Thank you for shopping with Highland Wholesalers! Powered by BRISK SMART BILLING.",
+      "tax_percentage": 0,
+      "created_at": "2026-10-06T14:22:26.828Z",
+      "updated_at": "2026-10-06T14:22:26.828Z"
     }
   ],
   "business_members": [
@@ -218,6 +277,48 @@
       },
       "created_at": "2026-10-05T09:55:32.134Z",
       "updated_at": "2026-10-05T09:55:32.134Z"
+    },
+    {
+      "id": "mem_888b375f8854",
+      "business_id": "biz_861d4e893cd3",
+      "user_id": "user_aa63d88f47d9",
+      "role": "owner",
+      "status": "active",
+      "permissions": {
+        "can_create_sales": true,
+        "can_apply_discount": true,
+        "max_discount_percent": 100,
+        "can_manage_products": true,
+        "can_manage_inventory": true,
+        "can_manage_workers": true,
+        "can_view_reports": true,
+        "can_configure_mpesa": true,
+        "can_manage_subscription": true,
+        "can_issue_refunds": true
+      },
+      "created_at": "2026-10-06T14:06:31.584Z",
+      "updated_at": "2026-10-06T14:06:31.584Z"
+    },
+    {
+      "id": "mem_78a107105b80",
+      "business_id": "biz_338a3d4a5260",
+      "user_id": "user_22b0bcc51e1c",
+      "role": "owner",
+      "status": "active",
+      "permissions": {
+        "can_create_sales": true,
+        "can_apply_discount": true,
+        "max_discount_percent": 100,
+        "can_manage_products": true,
+        "can_manage_inventory": true,
+        "can_manage_workers": true,
+        "can_view_reports": true,
+        "can_configure_mpesa": true,
+        "can_manage_subscription": true,
+        "can_issue_refunds": true
+      },
+      "created_at": "2026-10-06T14:22:26.828Z",
+      "updated_at": "2026-10-06T14:22:26.828Z"
     }
   ],
   "subscription_plans": [
@@ -338,6 +439,32 @@
       "days_remaining": 14,
       "created_at": "2026-10-05T09:55:32.134Z",
       "updated_at": "2026-10-05T09:55:32.134Z"
+    },
+    {
+      "id": "sub_f47493577a55",
+      "business_id": "biz_861d4e893cd3",
+      "plan_id": "plan_standard",
+      "plan_name": "Standard (14-Day Free Trial)",
+      "status": "trial",
+      "trial_started_at": "2026-10-06T14:06:31.584Z",
+      "trial_ends_at": "2026-10-20T14:06:31.584Z",
+      "ends_at": "2026-10-20T14:06:31.584Z",
+      "days_remaining": 14,
+      "created_at": "2026-10-06T14:06:31.584Z",
+      "updated_at": "2026-10-06T14:06:31.584Z"
+    },
+    {
+      "id": "sub_8911fbee8091",
+      "business_id": "biz_338a3d4a5260",
+      "plan_id": "plan_standard",
+      "plan_name": "Standard (14-Day Free Trial)",
+      "status": "trial",
+      "trial_started_at": "2026-10-06T14:22:26.828Z",
+      "trial_ends_at": "2026-10-20T14:22:26.828Z",
+      "ends_at": "2026-10-20T14:22:26.828Z",
+      "days_remaining": 14,
+      "created_at": "2026-10-06T14:22:26.828Z",
+      "updated_at": "2026-10-06T14:22:26.828Z"
     }
   ],
   "categories": [
@@ -358,6 +485,18 @@
       "business_id": "biz_5251fd48fce2",
       "name": "General Merchandise",
       "created_at": "2026-10-05T09:55:32.137Z"
+    },
+    {
+      "id": "cat_2d1ead627ea9",
+      "business_id": "biz_861d4e893cd3",
+      "name": "General Merchandise",
+      "created_at": "2026-10-06T14:06:31.588Z"
+    },
+    {
+      "id": "cat_5140c5583335",
+      "business_id": "biz_338a3d4a5260",
+      "name": "General Merchandise",
+      "created_at": "2026-10-06T14:22:26.832Z"
     }
   ],
   "products": [
@@ -722,6 +861,28 @@
       "active": true,
       "has_credentials": true,
       "updated_at": "2026-10-05T09:55:32.138Z"
+    },
+    {
+      "id": "mpesa_cfg_37dcd51c2270",
+      "business_id": "biz_861d4e893cd3",
+      "environment": "test",
+      "consumer_key_masked": "••••••••••••4379",
+      "shortcode": "174379",
+      "passkey_masked": "••••••••••••bfb2",
+      "active": true,
+      "has_credentials": true,
+      "updated_at": "2026-10-06T14:06:31.588Z"
+    },
+    {
+      "id": "mpesa_cfg_79c1f734a266",
+      "business_id": "biz_338a3d4a5260",
+      "environment": "test",
+      "consumer_key_masked": "••••••••••••4379",
+      "shortcode": "174379",
+      "passkey_masked": "••••••••••••bfb2",
+      "active": true,
+      "has_credentials": true,
+      "updated_at": "2026-10-06T14:22:26.833Z"
     }
   ],
   "mpesa_callbacks": [],
@@ -791,6 +952,46 @@
       },
       "id": "log_2a81ba8e6c2d",
       "created_at": "2026-10-05T09:55:32.173Z"
+    },
+    {
+      "business_id": "biz_861d4e893cd3",
+      "user_id": "user_aa63d88f47d9",
+      "user_name": "Faith Wanjiku",
+      "action": "business_registered",
+      "resource_type": "business",
+      "resource_id": "biz_861d4e893cd3",
+      "metadata": {
+        "businessName": "Nairobi Fresh Mart",
+        "category": "Retail & Supermarket"
+      },
+      "id": "log_4df51e7c6cab",
+      "created_at": "2026-10-06T14:06:31.589Z"
+    },
+    {
+      "business_id": "biz_861d4e893cd3",
+      "user_id": "user_aa63d88f47d9",
+      "user_name": "Faith Wanjiku",
+      "action": "user_login",
+      "resource_type": "auth",
+      "resource_id": "user_aa63d88f47d9",
+      "metadata": {
+        "role": "owner"
+      },
+      "id": "log_ab13eea24024",
+      "created_at": "2026-10-06T14:06:31.616Z"
+    },
+    {
+      "business_id": "biz_338a3d4a5260",
+      "user_id": "user_22b0bcc51e1c",
+      "user_name": "James Kariuki",
+      "action": "user_login",
+      "resource_type": "auth",
+      "resource_id": "user_22b0bcc51e1c",
+      "metadata": {
+        "role": "owner"
+      },
+      "id": "log_c0728e4716fc",
+      "created_at": "2026-10-06T14:22:27.653Z"
     }
   ],
   "support_tickets": [
@@ -811,7 +1012,9 @@
   ],
   "receipt_counters": {
     "biz_abc_shop_001": 125,
-    "biz_5251fd48fce2": 0
+    "biz_5251fd48fce2": 0,
+    "biz_861d4e893cd3": 0,
+    "biz_338a3d4a5260": 0
   },
   "brands": [
     {
@@ -878,11 +1081,61 @@
       "created_at": "2026-10-05T09:55:32.135Z",
       "expires_at": "2026-10-06T09:55:32.135Z",
       "last_sent_at": "2026-10-05T09:55:32.135Z"
+    },
+    {
+      "id": "evt_b2d4eb561ffe",
+      "email": "testowner_1791295591404@briskshop.co.ke",
+      "token": "59c8cca06eed48736b0cf6a79c0d6f63162e90c0c8cbc3db",
+      "verified": false,
+      "created_at": "2026-10-06T14:06:31.586Z",
+      "expires_at": "2026-10-07T14:06:31.586Z",
+      "last_sent_at": "2026-10-06T14:06:31.586Z"
+    },
+    {
+      "id": "evt_6dd3b71eec9e",
+      "email": "realstore_1791296546774@briskbilling.co.ke",
+      "token": "b78296e40f3be96a19c2dfc105ae280972a61652fddffbeb",
+      "verified": false,
+      "created_at": "2026-10-06T14:22:26.829Z",
+      "expires_at": "2026-10-07T14:22:26.829Z",
+      "last_sent_at": "2026-10-06T14:22:26.829Z"
     }
   ],
   "password_resets": [],
   "worker_invitations": [],
   "login_activities": [
+    {
+      "id": "lac_b92e6adae4a8",
+      "user_id": "user_22b0bcc51e1c",
+      "email": "realstore_1791296546774@briskbilling.co.ke",
+      "status": "success",
+      "role": "owner",
+      "timestamp": "2026-10-06T14:22:27.652Z"
+    },
+    {
+      "id": "lac_84d2b8f090d9",
+      "user_id": "user_admin_001",
+      "email": "admin@briskbilling.co.ke",
+      "status": "success",
+      "role": "super_admin",
+      "timestamp": "2026-10-06T14:06:38.627Z"
+    },
+    {
+      "id": "lac_b2392858f195",
+      "user_id": "user_aa63d88f47d9",
+      "email": "testowner_1791295591404@briskshop.co.ke",
+      "status": "success",
+      "role": "owner",
+      "timestamp": "2026-10-06T14:06:31.616Z"
+    },
+    {
+      "id": "lac_c9b30b09932c",
+      "user_id": "user_admin_001",
+      "email": "admin@briskbilling.co.ke",
+      "status": "success",
+      "role": "super_admin",
+      "timestamp": "2026-10-06T14:02:20.307Z"
+    },
     {
       "id": "lac_846929ae80e7",
       "user_id": "user_87a67bd14ea8",

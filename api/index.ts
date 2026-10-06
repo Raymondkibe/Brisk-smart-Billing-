@@ -20,6 +20,15 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Vercel path normalizer: restore original route if rewritten by Vercel
+app.use((req: Request, _res: Response, next: NextFunction) => {
+  const matchedPath = (req.headers['x-matched-path'] as string) || (req.headers['x-invoke-path'] as string);
+  if (matchedPath && !matchedPath.endsWith('index.js') && !matchedPath.endsWith('index') && !matchedPath.endsWith('all.js')) {
+    req.url = matchedPath;
+  }
+  next();
+});
+
 // Mount API router at both /api and root to handle Vercel rewrites reliably
 app.use('/api', apiRouter);
 app.use(apiRouter);
