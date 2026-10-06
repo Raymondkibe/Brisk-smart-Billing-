@@ -1,6 +1,18 @@
 {
   "profiles": [
     {
+      "id": "user_admin_techray",
+      "email": "techray91@gmail.com",
+      "phone": "254712345678",
+      "full_name": "TechRay Super Admin",
+      "password": "Admin123!",
+      "password_hash": "3eb3fe66b31e3b4d10fa70b5cad49c7112294af6ae4e476a1c405155d45aa121",
+      "is_super_admin": true,
+      "email_verified": true,
+      "created_at": "2026-10-06T14:56:54.758Z",
+      "updated_at": "2026-10-06T14:56:54.758Z"
+    },
+    {
       "id": "user_admin_001",
       "email": "admin@briskbilling.co.ke",
       "phone": "254700000000",
@@ -9,8 +21,8 @@
       "password_hash": "2bb80e6074900a68d0f191a26d173e13d9418ac6677f98889ff01cf52c4293f9",
       "is_super_admin": true,
       "created_at": "2026-09-30T00:00:00.000Z",
-      "updated_at": "2026-10-06T14:06:38.626Z",
-      "last_login_at": "2026-10-06T14:06:38.626Z"
+      "updated_at": "2026-10-06T14:59:18.581Z",
+      "last_login_at": "2026-10-06T14:59:18.581Z"
     },
     {
       "id": "user_owner_001",
@@ -27,9 +39,9 @@
       "id": "user_worker_001",
       "email": "john.kamau@abcshop.co.ke",
       "phone": "0712345678",
-      "full_name": "John Kamau",
-      "password": "123456",
-      "password_hash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      "full_name": "Ken Okoth",
+      "password": "password123",
+      "password_hash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
       "email_verified": true,
       "created_at": "2026-10-02T12:09:09.564Z",
       "updated_at": "2026-10-02T12:09:09.564Z"
@@ -70,30 +82,17 @@
       "last_login_at": "2026-10-05T09:55:32.171Z"
     },
     {
-      "id": "user_aa63d88f47d9",
-      "email": "testowner_1791295591404@briskshop.co.ke",
-      "phone": "0712334455",
-      "full_name": "Faith Wanjiku",
-      "password": "mypassword123",
-      "password_hash": "6e659deaa85842cdabb5c6305fcc40033ba43772ec00d45c2a3c921741a5e377",
+      "id": "user_ab3ae5a894f8",
+      "email": "owner@apexminimarket.co.ke",
+      "phone": "0711223344",
+      "full_name": "Apex Owner",
+      "password": "password123",
+      "password_hash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
       "is_super_admin": false,
       "email_verified": true,
-      "created_at": "2026-10-06T14:06:31.584Z",
-      "updated_at": "2026-10-06T14:06:31.615Z",
-      "last_login_at": "2026-10-06T14:06:31.615Z"
-    },
-    {
-      "id": "user_22b0bcc51e1c",
-      "email": "realstore_1791296546774@briskbilling.co.ke",
-      "phone": "0722889900",
-      "full_name": "James Kariuki",
-      "password": "Password2026!",
-      "password_hash": "36090c71c24a8ecd0a6f727fe3b826ad4eb92e222e9b29b72420a26e19400907",
-      "is_super_admin": false,
-      "email_verified": true,
-      "created_at": "2026-10-06T14:22:26.828Z",
-      "updated_at": "2026-10-06T14:22:27.652Z",
-      "last_login_at": "2026-10-06T14:22:27.652Z"
+      "created_at": "2026-10-06T14:57:00.824Z",
+      "updated_at": "2026-10-06T14:57:00.852Z",
+      "last_login_at": "2026-10-06T14:57:00.852Z"
     }
   ],
   "businesses": [
@@ -133,36 +132,36 @@
       "updated_at": "2026-10-05T09:55:32.134Z"
     },
     {
-      "id": "biz_861d4e893cd3",
-      "owner_id": "user_aa63d88f47d9",
-      "name": "Nairobi Fresh Mart",
-      "slug": "nairobi-fresh-mart-956",
+      "id": "biz_f604eb9ab64c",
+      "owner_id": "user_worker_001",
+      "name": "Nairobi Superstore",
+      "slug": "nairobi-superstore-616",
       "category": "Retail & Supermarket",
-      "phone": "0712334455",
-      "email": "testowner_1791295591404@briskshop.co.ke",
+      "phone": "0712345678",
+      "email": "ken@nairobibiz.com",
       "location": "Nairobi, Kenya",
       "currency": "KES",
       "status": "active",
-      "receipt_footer": "Thank you for shopping with Nairobi Fresh Mart! Powered by BRISK SMART BILLING.",
+      "receipt_footer": "Thank you for shopping with Nairobi Superstore! Powered by BRISK SMART BILLING.",
       "tax_percentage": 0,
-      "created_at": "2026-10-06T14:06:31.584Z",
-      "updated_at": "2026-10-06T14:06:31.584Z"
+      "created_at": "2026-10-06T14:51:11.164Z",
+      "updated_at": "2026-10-06T14:51:11.164Z"
     },
     {
-      "id": "biz_338a3d4a5260",
-      "owner_id": "user_22b0bcc51e1c",
-      "name": "Highland Wholesalers",
-      "slug": "highland-wholesalers-185",
-      "category": "Wholesale & Distribution",
-      "phone": "0722889900",
-      "email": "realstore_1791296546774@briskbilling.co.ke",
+      "id": "biz_e554f93b23e2",
+      "owner_id": "user_ab3ae5a894f8",
+      "name": "Apex Mini Market",
+      "slug": "apex-mini-market-364",
+      "category": "Retail & Supermarket",
+      "phone": "0711223344",
+      "email": "owner@apexminimarket.co.ke",
       "location": "Nairobi, Kenya",
       "currency": "KES",
       "status": "active",
-      "receipt_footer": "Thank you for shopping with Highland Wholesalers! Powered by BRISK SMART BILLING.",
+      "receipt_footer": "Thank you for shopping with Apex Mini Market! Powered by BRISK SMART BILLING.",
       "tax_percentage": 0,
-      "created_at": "2026-10-06T14:22:26.828Z",
-      "updated_at": "2026-10-06T14:22:26.828Z"
+      "created_at": "2026-10-06T14:57:00.824Z",
+      "updated_at": "2026-10-06T14:57:00.824Z"
     }
   ],
   "business_members": [
@@ -279,9 +278,9 @@
       "updated_at": "2026-10-05T09:55:32.134Z"
     },
     {
-      "id": "mem_888b375f8854",
-      "business_id": "biz_861d4e893cd3",
-      "user_id": "user_aa63d88f47d9",
+      "id": "mem_83b0c970d4b2",
+      "business_id": "biz_f604eb9ab64c",
+      "user_id": "user_worker_001",
       "role": "owner",
       "status": "active",
       "permissions": {
@@ -296,13 +295,13 @@
         "can_manage_subscription": true,
         "can_issue_refunds": true
       },
-      "created_at": "2026-10-06T14:06:31.584Z",
-      "updated_at": "2026-10-06T14:06:31.584Z"
+      "created_at": "2026-10-06T14:51:11.164Z",
+      "updated_at": "2026-10-06T14:51:11.164Z"
     },
     {
-      "id": "mem_78a107105b80",
-      "business_id": "biz_338a3d4a5260",
-      "user_id": "user_22b0bcc51e1c",
+      "id": "mem_528e9886ed3d",
+      "business_id": "biz_e554f93b23e2",
+      "user_id": "user_ab3ae5a894f8",
       "role": "owner",
       "status": "active",
       "permissions": {
@@ -317,8 +316,8 @@
         "can_manage_subscription": true,
         "can_issue_refunds": true
       },
-      "created_at": "2026-10-06T14:22:26.828Z",
-      "updated_at": "2026-10-06T14:22:26.828Z"
+      "created_at": "2026-10-06T14:57:00.824Z",
+      "updated_at": "2026-10-06T14:57:00.824Z"
     }
   ],
   "subscription_plans": [
@@ -441,30 +440,30 @@
       "updated_at": "2026-10-05T09:55:32.134Z"
     },
     {
-      "id": "sub_f47493577a55",
-      "business_id": "biz_861d4e893cd3",
+      "id": "sub_08fb4b7ab8ab",
+      "business_id": "biz_f604eb9ab64c",
       "plan_id": "plan_standard",
       "plan_name": "Standard (14-Day Free Trial)",
       "status": "trial",
-      "trial_started_at": "2026-10-06T14:06:31.584Z",
-      "trial_ends_at": "2026-10-20T14:06:31.584Z",
-      "ends_at": "2026-10-20T14:06:31.584Z",
+      "trial_started_at": "2026-10-06T14:51:11.164Z",
+      "trial_ends_at": "2026-10-20T14:51:11.164Z",
+      "ends_at": "2026-10-20T14:51:11.164Z",
       "days_remaining": 14,
-      "created_at": "2026-10-06T14:06:31.584Z",
-      "updated_at": "2026-10-06T14:06:31.584Z"
+      "created_at": "2026-10-06T14:51:11.164Z",
+      "updated_at": "2026-10-06T14:51:11.164Z"
     },
     {
-      "id": "sub_8911fbee8091",
-      "business_id": "biz_338a3d4a5260",
+      "id": "sub_37d29129873a",
+      "business_id": "biz_e554f93b23e2",
       "plan_id": "plan_standard",
       "plan_name": "Standard (14-Day Free Trial)",
       "status": "trial",
-      "trial_started_at": "2026-10-06T14:22:26.828Z",
-      "trial_ends_at": "2026-10-20T14:22:26.828Z",
-      "ends_at": "2026-10-20T14:22:26.828Z",
+      "trial_started_at": "2026-10-06T14:57:00.824Z",
+      "trial_ends_at": "2026-10-20T14:57:00.824Z",
+      "ends_at": "2026-10-20T14:57:00.824Z",
       "days_remaining": 14,
-      "created_at": "2026-10-06T14:22:26.828Z",
-      "updated_at": "2026-10-06T14:22:26.828Z"
+      "created_at": "2026-10-06T14:57:00.824Z",
+      "updated_at": "2026-10-06T14:57:00.824Z"
     }
   ],
   "categories": [
@@ -487,16 +486,16 @@
       "created_at": "2026-10-05T09:55:32.137Z"
     },
     {
-      "id": "cat_2d1ead627ea9",
-      "business_id": "biz_861d4e893cd3",
+      "id": "cat_1d77734bf902",
+      "business_id": "biz_f604eb9ab64c",
       "name": "General Merchandise",
-      "created_at": "2026-10-06T14:06:31.588Z"
+      "created_at": "2026-10-06T14:51:11.169Z"
     },
     {
-      "id": "cat_5140c5583335",
-      "business_id": "biz_338a3d4a5260",
+      "id": "cat_ce93929a08ea",
+      "business_id": "biz_e554f93b23e2",
       "name": "General Merchandise",
-      "created_at": "2026-10-06T14:22:26.832Z"
+      "created_at": "2026-10-06T14:57:00.828Z"
     }
   ],
   "products": [
@@ -863,26 +862,26 @@
       "updated_at": "2026-10-05T09:55:32.138Z"
     },
     {
-      "id": "mpesa_cfg_37dcd51c2270",
-      "business_id": "biz_861d4e893cd3",
+      "id": "mpesa_cfg_fdf2c5efe28d",
+      "business_id": "biz_f604eb9ab64c",
       "environment": "test",
       "consumer_key_masked": "••••••••••••4379",
       "shortcode": "174379",
       "passkey_masked": "••••••••••••bfb2",
       "active": true,
       "has_credentials": true,
-      "updated_at": "2026-10-06T14:06:31.588Z"
+      "updated_at": "2026-10-06T14:51:11.170Z"
     },
     {
-      "id": "mpesa_cfg_79c1f734a266",
-      "business_id": "biz_338a3d4a5260",
+      "id": "mpesa_cfg_c555095e587c",
+      "business_id": "biz_e554f93b23e2",
       "environment": "test",
       "consumer_key_masked": "••••••••••••4379",
       "shortcode": "174379",
       "passkey_masked": "••••••••••••bfb2",
       "active": true,
       "has_credentials": true,
-      "updated_at": "2026-10-06T14:22:26.833Z"
+      "updated_at": "2026-10-06T14:57:00.828Z"
     }
   ],
   "mpesa_callbacks": [],
@@ -954,44 +953,45 @@
       "created_at": "2026-10-05T09:55:32.173Z"
     },
     {
-      "business_id": "biz_861d4e893cd3",
-      "user_id": "user_aa63d88f47d9",
-      "user_name": "Faith Wanjiku",
+      "business_id": "biz_f604eb9ab64c",
+      "user_id": "user_worker_001",
+      "user_name": "Ken Okoth",
       "action": "business_registered",
       "resource_type": "business",
-      "resource_id": "biz_861d4e893cd3",
+      "resource_id": "biz_f604eb9ab64c",
       "metadata": {
-        "businessName": "Nairobi Fresh Mart",
+        "businessName": "Nairobi Superstore",
         "category": "Retail & Supermarket"
       },
-      "id": "log_4df51e7c6cab",
-      "created_at": "2026-10-06T14:06:31.589Z"
+      "id": "log_4b1c52217cdf",
+      "created_at": "2026-10-06T14:51:11.171Z"
     },
     {
-      "business_id": "biz_861d4e893cd3",
-      "user_id": "user_aa63d88f47d9",
-      "user_name": "Faith Wanjiku",
+      "business_id": "biz_e554f93b23e2",
+      "user_id": "user_ab3ae5a894f8",
+      "user_name": "Apex Owner",
+      "action": "business_registered",
+      "resource_type": "business",
+      "resource_id": "biz_e554f93b23e2",
+      "metadata": {
+        "businessName": "Apex Mini Market",
+        "category": "Retail & Supermarket"
+      },
+      "id": "log_b014ff036fd6",
+      "created_at": "2026-10-06T14:57:00.829Z"
+    },
+    {
+      "business_id": "biz_e554f93b23e2",
+      "user_id": "user_ab3ae5a894f8",
+      "user_name": "Apex Owner",
       "action": "user_login",
       "resource_type": "auth",
-      "resource_id": "user_aa63d88f47d9",
+      "resource_id": "user_ab3ae5a894f8",
       "metadata": {
         "role": "owner"
       },
-      "id": "log_ab13eea24024",
-      "created_at": "2026-10-06T14:06:31.616Z"
-    },
-    {
-      "business_id": "biz_338a3d4a5260",
-      "user_id": "user_22b0bcc51e1c",
-      "user_name": "James Kariuki",
-      "action": "user_login",
-      "resource_type": "auth",
-      "resource_id": "user_22b0bcc51e1c",
-      "metadata": {
-        "role": "owner"
-      },
-      "id": "log_c0728e4716fc",
-      "created_at": "2026-10-06T14:22:27.653Z"
+      "id": "log_44af536a0236",
+      "created_at": "2026-10-06T14:57:00.853Z"
     }
   ],
   "support_tickets": [
@@ -1013,8 +1013,8 @@
   "receipt_counters": {
     "biz_abc_shop_001": 125,
     "biz_5251fd48fce2": 0,
-    "biz_861d4e893cd3": 0,
-    "biz_338a3d4a5260": 0
+    "biz_f604eb9ab64c": 0,
+    "biz_e554f93b23e2": 0
   },
   "brands": [
     {
@@ -1083,58 +1083,64 @@
       "last_sent_at": "2026-10-05T09:55:32.135Z"
     },
     {
-      "id": "evt_b2d4eb561ffe",
-      "email": "testowner_1791295591404@briskshop.co.ke",
-      "token": "59c8cca06eed48736b0cf6a79c0d6f63162e90c0c8cbc3db",
+      "id": "evt_b94c29bc1d80",
+      "email": "ken@nairobibiz.com",
+      "token": "c3cb56b9c8abfcc68afc6ed50a5ce95abc4807da143f92a4",
       "verified": false,
-      "created_at": "2026-10-06T14:06:31.586Z",
-      "expires_at": "2026-10-07T14:06:31.586Z",
-      "last_sent_at": "2026-10-06T14:06:31.586Z"
+      "created_at": "2026-10-06T14:51:11.165Z",
+      "expires_at": "2026-10-07T14:51:11.165Z",
+      "last_sent_at": "2026-10-06T14:51:11.165Z"
     },
     {
-      "id": "evt_6dd3b71eec9e",
-      "email": "realstore_1791296546774@briskbilling.co.ke",
-      "token": "b78296e40f3be96a19c2dfc105ae280972a61652fddffbeb",
+      "id": "evt_68e9bdca689a",
+      "email": "owner@apexminimarket.co.ke",
+      "token": "fa479a851aa68d7b556c3a1b3c5137a91cc1dbe5187538c5",
       "verified": false,
-      "created_at": "2026-10-06T14:22:26.829Z",
-      "expires_at": "2026-10-07T14:22:26.829Z",
-      "last_sent_at": "2026-10-06T14:22:26.829Z"
+      "created_at": "2026-10-06T14:57:00.826Z",
+      "expires_at": "2026-10-07T14:57:00.826Z",
+      "last_sent_at": "2026-10-06T14:57:00.826Z"
     }
   ],
   "password_resets": [],
   "worker_invitations": [],
   "login_activities": [
     {
-      "id": "lac_b92e6adae4a8",
-      "user_id": "user_22b0bcc51e1c",
-      "email": "realstore_1791296546774@briskbilling.co.ke",
-      "status": "success",
-      "role": "owner",
-      "timestamp": "2026-10-06T14:22:27.652Z"
-    },
-    {
-      "id": "lac_84d2b8f090d9",
+      "id": "lac_43d68e32d43c",
       "user_id": "user_admin_001",
       "email": "admin@briskbilling.co.ke",
       "status": "success",
       "role": "super_admin",
-      "timestamp": "2026-10-06T14:06:38.627Z"
+      "timestamp": "2026-10-06T14:59:18.582Z"
     },
     {
-      "id": "lac_b2392858f195",
-      "user_id": "user_aa63d88f47d9",
-      "email": "testowner_1791295591404@briskshop.co.ke",
+      "id": "lac_e730cf45202c",
+      "user_id": "user_ab3ae5a894f8",
+      "email": "owner@apexminimarket.co.ke",
       "status": "success",
       "role": "owner",
-      "timestamp": "2026-10-06T14:06:31.616Z"
+      "timestamp": "2026-10-06T14:57:00.853Z"
     },
     {
-      "id": "lac_c9b30b09932c",
+      "id": "lac_966cf0c98ed9",
       "user_id": "user_admin_001",
       "email": "admin@briskbilling.co.ke",
       "status": "success",
       "role": "super_admin",
-      "timestamp": "2026-10-06T14:02:20.307Z"
+      "timestamp": "2026-10-06T14:50:59.463Z"
+    },
+    {
+      "id": "lac_4f666a95ad0d",
+      "user_id": "unknown",
+      "email": "admin@brisksmartbilling.com",
+      "status": "failed",
+      "timestamp": "2026-10-06T14:50:51.370Z"
+    },
+    {
+      "id": "lac_43b76d3f3799",
+      "user_id": "unknown",
+      "email": "admin@brisksmartbilling.com",
+      "status": "failed",
+      "timestamp": "2026-10-06T14:50:45.200Z"
     },
     {
       "id": "lac_846929ae80e7",

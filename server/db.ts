@@ -137,6 +137,19 @@ function getInitialSeedData(): DatabaseSchema {
     updated_at: now,
   };
 
+  const techrayAdmin: UserProfile = {
+    id: 'user_admin_techray',
+    email: 'techray91@gmail.com',
+    phone: '254712345678',
+    full_name: 'TechRay Super Admin',
+    password: 'Admin123!',
+    password_hash: hashString('Admin123!'),
+    is_super_admin: true,
+    email_verified: true,
+    created_at: now,
+    updated_at: now,
+  };
+
   // 2. Acceptance Test Business: ABC SHOP
   const bizId = 'biz_abc_shop_001';
   const ownerId = 'user_owner_001';
@@ -592,7 +605,7 @@ function getInitialSeedData(): DatabaseSchema {
   };
 
   return {
-    profiles: [superAdmin, ownerProfile, cashierProfile, managerProfile, salesProfile],
+    profiles: [superAdmin, techrayAdmin, ownerProfile, cashierProfile, managerProfile, salesProfile],
     businesses: [abcShop],
     business_members: members,
     subscription_plans: plans,
@@ -665,10 +678,12 @@ class Database {
   public ensureAcceptanceTestData(): void {
     const seed = getInitialSeedData();
 
-    // Ensure super admin exists
-    const adminIdx = this.data.profiles.findIndex(p => p.is_super_admin || p.id === 'user_admin_001');
-    if (adminIdx === -1) {
+    // Ensure super admin profiles exist
+    if (!this.data.profiles.some(p => p.email === 'admin@briskbilling.co.ke')) {
       this.data.profiles.unshift(seed.profiles[0]);
+    }
+    if (!this.data.profiles.some(p => p.email === 'techray91@gmail.com')) {
+      this.data.profiles.unshift(seed.profiles[1]);
     }
 
     // Ensure ABC SHOP exists

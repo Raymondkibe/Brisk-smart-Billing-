@@ -17,16 +17,15 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Vercel path normalizer: restore original route if rewritten by Vercel
-app.use((req: Request, _res: Response, next: NextFunction) => {
-  const matchedPath = (req.headers['x-matched-path'] as string) || (req.headers['x-invoke-path'] as string);
-  if (matchedPath && !matchedPath.endsWith('index.js') && !matchedPath.endsWith('index') && !matchedPath.endsWith('all.js')) {
-    req.url = matchedPath;
+// Safe body parser that does not hang on Vercel if body was already parsed
+app.use((req: Request, res: Response, next: NextFunction) => {
+  if (req.body && typeof req.body === 'object') {
+    return next();
   }
-  next();
+  express.json()(req, res, (err) => {
+    if (err) return next(err);
+    express.urlencoded({ extended: true })(req, res, next);
+  });
 });
 
 // Mount API router at both /api and root to handle Vercel rewrites reliably
@@ -44,5 +43,10 @@ app.get(['/api', '/'], (_req: Request, res: Response) => {
   });
 });
 
-export default app;
+// Primary Vercel serverless request handler
+export default function handler(req: any, res: any) {
+  return app(req, res);
+}
+
+
 

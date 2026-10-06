@@ -237,6 +237,18 @@ function getInitialSeedData() {
     created_at: now,
     updated_at: now
   };
+  const techrayAdmin = {
+    id: "user_admin_techray",
+    email: "techray91@gmail.com",
+    phone: "254712345678",
+    full_name: "TechRay Super Admin",
+    password: "Admin123!",
+    password_hash: hashString("Admin123!"),
+    is_super_admin: true,
+    email_verified: true,
+    created_at: now,
+    updated_at: now
+  };
   const bizId = "biz_abc_shop_001";
   const ownerId = "user_owner_001";
   const workerCashierId = "user_worker_001";
@@ -668,7 +680,7 @@ function getInitialSeedData() {
     created_at: now
   };
   return {
-    profiles: [superAdmin, ownerProfile, cashierProfile, managerProfile, salesProfile],
+    profiles: [superAdmin, techrayAdmin, ownerProfile, cashierProfile, managerProfile, salesProfile],
     businesses: [abcShop],
     business_members: members,
     subscription_plans: plans,
@@ -732,9 +744,11 @@ var Database = class {
   }
   ensureAcceptanceTestData() {
     const seed = getInitialSeedData();
-    const adminIdx = this.data.profiles.findIndex((p) => p.is_super_admin || p.id === "user_admin_001");
-    if (adminIdx === -1) {
+    if (!this.data.profiles.some((p) => p.email === "admin@briskbilling.co.ke")) {
       this.data.profiles.unshift(seed.profiles[0]);
+    }
+    if (!this.data.profiles.some((p) => p.email === "techray91@gmail.com")) {
+      this.data.profiles.unshift(seed.profiles[1]);
     }
     const hasAbc = this.data.businesses.some((b) => b.id === "biz_abc_shop_001");
     if (!hasAbc) {
@@ -2049,21 +2063,6 @@ var Database = class {
 };
 var db = new Database();
 
-// server/supabase.ts
-import { createClient } from "@supabase/supabase-js";
-import dotenv from "dotenv";
-dotenv.config();
-var SUPABASE_URL = process.env.SUPABASE_URL || "https://uztxsjbmugfbhgedpmpe.supabase.co";
-var SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6dHhzamJtdWdmYmhnZWRwbXBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MTAxNjUwOSwiZXhwIjoyMTA2NTkyNTA5fQ.U92crHFnhmwEMpPh9BLvPwcTyefznfy5Dx5POfwPzoM";
-var SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || "sb_publishable_jgXwQ8Vy2UZbQPkS2a4Z9Q_eTcjs7Xk";
-var supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false
-  }
-});
-var supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 // server/mpesa.ts
 import crypto3 from "crypto";
 var MpesaService = class {
@@ -2745,7 +2744,7 @@ apiRouter.use((req, res, next) => {
   }
   next();
 });
-apiRouter.post("/auth/register-business", async (req, res) => {
+apiRouter.post("/auth/register-business", (req, res) => {
   try {
     const {
       fullName,
@@ -2868,24 +2867,15 @@ apiRouter.post("/auth/register-business", async (req, res) => {
       shortcode: "174379",
       active: true
     });
-    try {
-      if (finalEmail && password) {
-        await supabaseAdmin.auth.admin.createUser({
-          email: finalEmail,
-          password,
-          email_confirm: true,
-          user_metadata: {
-            full_name: finalOwnerName,
-            phone: finalPhone,
-            role: "owner",
-            business_id: businessId,
-            business_name: finalBizName
-          }
-        });
-      }
-    } catch (sbErr) {
-      console.warn("[SUPABASE AUTH NOTICE]:", sbErr?.message || sbErr);
-    }
+    db.logAction({
+      business_id: businessId,
+      user_id: user.id,
+      user_name: finalOwnerName,
+      action: "business_registered",
+      resource_type: "business",
+      resource_id: businessId,
+      metadata: { businessName: finalBizName, category }
+    });
     return res.status(201).json({
       success: true,
       user,
@@ -3054,50 +3044,13 @@ ${message}`,
     return res.status(500).json({ error: err.message || "Failed to submit contact request." });
   }
 });
-apiRouter.post("/auth/login", async (req, res) => {
+apiRouter.post("/auth/login", (req, res) => {
   const { identifier, email, phone, password } = req.body;
   const query = (identifier || email || phone || "").trim();
   if (!query || !password) {
     return res.status(400).json({ error: "Invalid email or password." });
   }
-  const trimmedPwd = password.trim();
-  let sbAuthValid = false;
-  if (query.includes("@")) {
-    try {
-      const { data: sbData } = await supabaseClient.auth.signInWithPassword({
-        email: query,
-        password: trimmedPwd
-      });
-      if (sbData?.session?.access_token) {
-        sbAuthValid = true;
-      }
-    } catch {
-    }
-  }
-  let user = db.getProfileByEmail(query) || db.getProfileByPhone(query);
-  if (!user && sbAuthValid) {
-    try {
-      const { data: userList } = await supabaseAdmin.auth.admin.listUsers();
-      const sbU = userList?.users?.find((u) => u.email?.toLowerCase() === query.toLowerCase());
-      if (sbU) {
-        const meta = sbU.user_metadata || {};
-        const recovered = {
-          id: sbU.id,
-          email: sbU.email || query,
-          phone: meta.phone || "",
-          full_name: meta.full_name || "Store Owner",
-          password: trimmedPwd,
-          password_hash: hashString(trimmedPwd),
-          email_verified: true,
-          created_at: sbU.created_at || (/* @__PURE__ */ new Date()).toISOString(),
-          updated_at: (/* @__PURE__ */ new Date()).toISOString()
-        };
-        db.createProfile(recovered);
-        user = recovered;
-      }
-    } catch {
-    }
-  }
+  const user = db.getProfileByEmail(query) || db.getProfileByPhone(query);
   if (!user) {
     db.recordLoginActivity({
       user_id: "unknown",
@@ -3106,10 +3059,11 @@ apiRouter.post("/auth/login", async (req, res) => {
     });
     return res.status(401).json({ error: "Invalid email or password." });
   }
+  const trimmedPwd = password.trim();
   const matchPlain = user.password && user.password === trimmedPwd;
   const matchHash = user.password_hash && user.password_hash === hashString(trimmedPwd);
   const matchAdmin = user.is_super_admin && (trimmedPwd === "Admin123!" || trimmedPwd === "admin123");
-  if (!sbAuthValid && !matchPlain && !matchHash && !matchAdmin) {
+  if (!matchPlain && !matchHash && !matchAdmin) {
     db.recordLoginActivity({
       user_id: user.id,
       email: user.email,
@@ -5719,14 +5673,14 @@ app.use((req, res, next) => {
   }
   next();
 });
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use((req, _res, next) => {
-  const matchedPath = req.headers["x-matched-path"] || req.headers["x-invoke-path"];
-  if (matchedPath && !matchedPath.endsWith("index.js") && !matchedPath.endsWith("index") && !matchedPath.endsWith("all.js")) {
-    req.url = matchedPath;
+app.use((req, res, next) => {
+  if (req.body && typeof req.body === "object") {
+    return next();
   }
-  next();
+  express.json()(req, res, (err) => {
+    if (err) return next(err);
+    express.urlencoded({ extended: true })(req, res, next);
+  });
 });
 app.use("/api", apiRouter);
 app.use(apiRouter);
@@ -5739,7 +5693,9 @@ app.get(["/api", "/"], (_req, res) => {
     timestamp: (/* @__PURE__ */ new Date()).toISOString()
   });
 });
-var index_default = app;
+function handler(req, res) {
+  return app(req, res);
+}
 export {
-  index_default as default
+  handler as default
 };
