@@ -31,6 +31,7 @@ import { useAuth } from '../context/AuthContext';
 import { api, axiosInstance } from '../services/api';
 import { Product, Category, Sale, Receipt } from '../types';
 import { ThermalReceiptModal } from '../components/ThermalReceiptModal';
+import { ShelfLabelStudioModal } from '../components/ShelfLabelStudioModal';
 import QRCode from 'qrcode';
 
 interface CartItem {
@@ -56,10 +57,12 @@ export const PosPage: React.FC<PosPageProps> = ({ initialCart, onNavigate }) => 
   const [customerName, setCustomerName] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // Mobile cart drawer state
+  // Mobile cart drawer state & Modals
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
   const [barcodeScanModalOpen, setBarcodeScanModalOpen] = useState(false);
   const [barcodeInputValue, setBarcodeInputValue] = useState('');
+  const [shelfStudioOpen, setShelfStudioOpen] = useState(false);
+  const [scanToast, setScanToast] = useState<string | null>(null);
 
   // Checkout Modals & Real-time M-Pesa State Machine (Section 13-20)
   // Payment states: 'idle' | 'PENDING' | 'PROCESSING' | 'PAID' | 'CANCELLED' | 'FAILED' | 'EXPIRED' | 'REFUNDED'
@@ -88,13 +91,41 @@ export const PosPage: React.FC<PosPageProps> = ({ initialCart, onNavigate }) => 
       if (prodData) {
         setProducts(prodData);
 
+        // Check URL parameters for scanned product
+        const params = new URLSearchParams(window.location.search);
+        const addProdId = params.get('add_product') || params.get('productId');
+        const addBarcode = params.get('barcode') || params.get('sku');
+
+        const initialList: CartItem[] = [];
+
         if (initialCart && initialCart.length > 0) {
-          const newCart: CartItem[] = [];
           for (const item of initialCart) {
             const p = prodData.find(x => x.id === item.productId);
-            if (p) newCart.push({ product: p, quantity: item.quantity });
+            if (p) initialList.push({ product: p, quantity: item.quantity });
           }
-          if (newCart.length > 0) setCart(newCart);
+        }
+
+        if (addProdId || addBarcode) {
+          const matched = prodData.find(p => p.id === addProdId || p.barcode === addBarcode || p.sku === addBarcode);
+          if (matched && matched.stock_quantity > 0) {
+            const existingIdx = initialList.findIndex(i => i.product.id === matched.id);
+            if (existingIdx !== -1) {
+              initialList[existingIdx].quantity += 1;
+            } else {
+              initialList.push({ product: matched, quantity: 1 });
+            }
+            setScanToast(`Scanned QR shelf tag: Added "${matched.name}" to cart!`);
+            setTimeout(() => setScanToast(null), 3500);
+            if (window.innerWidth < 1024) {
+              setMobileCartOpen(true);
+            }
+            // Clean URL query
+            window.history.replaceState({}, '', window.location.pathname);
+          }
+        }
+
+        if (initialList.length > 0) {
+          setCart(initialList);
         }
       }
       if (catData) {
@@ -536,8 +567,16 @@ export const PosPage: React.FC<PosPageProps> = ({ initialCart, onNavigate }) => 
           </div>
         </div>
 
-        {/* Quick Barcode Scanner Trigger Button */}
+        {/* Quick Barcode Scanner & QR Shelf Labels Trigger Buttons */}
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShelfStudioOpen(true)}
+            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer border border-slate-200"
+          >
+            <QrCode className="w-4 h-4 text-blue-600" />
+            <span>QR Shelf Labels</span>
+          </button>
+
           <button
             onClick={() => setBarcodeScanModalOpen(true)}
             className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
@@ -547,6 +586,19 @@ export const PosPage: React.FC<PosPageProps> = ({ initialCart, onNavigate }) => 
           </button>
         </div>
       </div>
+
+      {/* Scanned QR Shelf Label Toast Banner */}
+      {scanToast && (
+        <div className="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs flex items-center justify-between gap-2 shadow-xs animate-in fade-in slide-in-from-top duration-200">
+          <div className="flex items-center gap-2 font-semibold">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>{scanToast}</span>
+          </div>
+          <button onClick={() => setScanToast(null)} className="text-emerald-500 hover:text-emerald-700">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* Error / Alert banner */}
       {errorMessage && (
@@ -1204,6 +1256,14 @@ export const PosPage: React.FC<PosPageProps> = ({ initialCart, onNavigate }) => 
       <ThermalReceiptModal
         receipt={currentReceipt}
         onClose={() => setCurrentReceipt(null)}
+      />
+
+      {/* QR CODE SHELF LABEL STUDIO MODAL */}
+      <ShelfLabelStudioModal
+        isOpen={shelfStudioOpen}
+        onClose={() => setShelfStudioOpen(false)}
+        products={products}
+        activeBusiness={activeBusiness}
       />
 
     </div>

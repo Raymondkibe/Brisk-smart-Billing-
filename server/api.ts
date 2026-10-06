@@ -2369,6 +2369,112 @@ apiRouter.get('/products', (req: AuthenticatedRequest, res: Response) => {
   return res.json(products);
 });
 
+// Public Product Details endpoint for Shelf QR Code Scans (Accessible without auth)
+apiRouter.get('/public/products/:id', (req: Request, res: Response) => {
+  const targetId = req.params.id;
+  const product = db.getProductById(targetId);
+
+  if (!product) {
+    return res.status(404).json({ error: 'Product not found on shelf catalog' });
+  }
+
+  const business = db.getBusinessById(product.business_id);
+  return res.json({
+    success: true,
+    product,
+    business: business
+      ? {
+          id: business.id,
+          name: business.name,
+          currency: business.currency,
+          location: business.location,
+          category: business.category,
+        }
+      : null,
+  });
+});
+
+// Public Instant Self-Checkout Endpoint for QR Scanned Products
+apiRouter.post('/public/products/self-checkout', async (req: Request, res: Response) => {
+  try {
+    const { productId, businessId, quantity = 1, phone, customerName = 'Customer' } = req.body;
+    if (!productId || !phone) {
+      return res.status(400).json({ error: 'Product ID and customer phone number are required' });
+    }
+
+    const product = db.getProductById(productId, businessId);
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    const business = db.getBusinessById(product.business_id);
+    const normalizedPhone = normalizePhoneNumber(phone);
+    const totalAmount = (Number(product.selling_price) || 0) * Number(quantity);
+
+    // Create a quick self-checkout sale
+    const saleId = generateId('sale_self');
+    const saleNumber = `SC-${Date.now().toString().slice(-6)}`;
+    const now = new Date().toISOString();
+
+    const sale: Sale = {
+      id: saleId,
+      business_id: product.business_id,
+      customer_name: customerName,
+      customer_phone: normalizedPhone,
+      worker_id: 'self_checkout',
+      worker_name: 'Self-Checkout Scanner',
+      sale_number: saleNumber,
+      subtotal: totalAmount,
+      tax: 0,
+      discount: 0,
+      total: totalAmount,
+      status: 'completed',
+      payment_method: 'mpesa',
+      payment_status: 'PENDING',
+      items: [
+        {
+          id: generateId('sitem'),
+          sale_id: saleId,
+          product_id: product.id,
+          product_name_snapshot: product.name,
+          quantity: Number(quantity),
+          unit_price: product.selling_price,
+          discount: 0,
+          tax: 0,
+          total: totalAmount,
+          created_at: now,
+        }
+      ],
+      created_at: now,
+      updated_at: now,
+    };
+
+    db.createSale(sale);
+
+    // Trigger M-Pesa STK Push
+    const stkResult = await MpesaService.initiateStkPush({
+      businessId: product.business_id,
+      phone: normalizedPhone,
+      amount: totalAmount,
+      saleId,
+      accountReference: saleNumber,
+      transactionDesc: `Payment for ${product.name.slice(0, 15)}`,
+    });
+
+    return res.json({
+      success: true,
+      saleId,
+      saleNumber,
+      amount: totalAmount,
+      currency: business?.currency || 'KES',
+      message: `M-Pesa STK push sent to ${maskPhoneNumber(normalizedPhone)} for KES ${totalAmount.toLocaleString()}. Please enter your PIN.`,
+      stkResult,
+    });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message || 'Failed to initiate self-checkout' });
+  }
+});
+
 // Create Product (Sections 2, 3, 5, 8, 9, 11)
 apiRouter.post('/products', (req: AuthenticatedRequest, res: Response) => {
   const businessId = req.businessId!;

@@ -30,6 +30,8 @@ import { LoginPage } from './pages/LoginPage';
 import { ContactPage } from './pages/ContactPage';
 import { PaymentSettingsPage } from './pages/PaymentSettingsPage';
 import { BankTransfersPage } from './pages/BankTransfersPage';
+import { PublicProductPage } from './pages/PublicProductPage';
+import { ProductLabelsPage } from './pages/ProductLabelsPage';
 
 /**
  * Normalizes any route string by stripping query parameters, hashes, and trailing slashes.
@@ -133,7 +135,9 @@ function AppContent() {
     cleanPath === '/onboarding' ||
     cleanPath === '/contact' ||
     cleanPath.startsWith('/pay/') ||
-    cleanPath.startsWith('/verify-receipt/');
+    cleanPath.startsWith('/verify-receipt/') ||
+    cleanPath.startsWith('/product/') ||
+    cleanPath.startsWith('/p/');
 
   // When an unauthenticated user attempts to visit a protected route, preserve their requested path in session storage
   useEffect(() => {
@@ -193,6 +197,13 @@ function AppContent() {
           {cleanPath === '/contact' && (
             <ContactPage onNavigate={navigate} />
           )}
+
+          {(cleanPath.startsWith('/product/') || cleanPath.startsWith('/p/')) && (
+            <PublicProductPage
+              productId={cleanPath.replace('/product/', '').replace('/p/', '')}
+              onNavigate={navigate}
+            />
+          )}
         </div>
 
         <SiteFooter variant="public" onNavigate={navigate} />
@@ -234,6 +245,10 @@ function AppContent() {
 
         case '/products':
           return <PageSkeleton pageTitle="Products & Inventory Catalog" variant="table" />;
+
+        case '/labels':
+        case '/product-labels':
+          return <PageSkeleton pageTitle="Product Labels & Shelf Tag Studio" variant="form" />;
 
         case '/inventory':
           return <PageSkeleton pageTitle="Stock Levels & Movements" variant="table" />;
@@ -303,6 +318,12 @@ function AppContent() {
 
       case '/products':
         return <ProductsPage />;
+
+      case '/labels':
+      case '/product-labels':
+      case '/products/labels':
+      case '/shelf-labels':
+        return <ProductLabelsPage onNavigate={navigate} />;
 
       case '/inventory':
         return <InventoryPage />;

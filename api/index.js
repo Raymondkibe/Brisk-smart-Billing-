@@ -2063,6 +2063,21 @@ var Database = class {
 };
 var db = new Database();
 
+// server/supabase.ts
+import { createClient } from "@supabase/supabase-js";
+import dotenv from "dotenv";
+dotenv.config();
+var SUPABASE_URL = process.env.SUPABASE_URL || "https://uztxsjbmugfbhgedpmpe.supabase.co";
+var SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6dHhzamJtdWdmYmhnZWRwbXBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MTAxNjUwOSwiZXhwIjoyMTA2NTkyNTA5fQ.U92crHFnhmwEMpPh9BLvPwcTyefznfy5Dx5POfwPzoM";
+var SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || "sb_publishable_jgXwQ8Vy2UZbQPkS2a4Z9Q_eTcjs7Xk";
+var supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false
+  }
+});
+var supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 // server/mpesa.ts
 import crypto3 from "crypto";
 var MpesaService = class {
@@ -2422,7 +2437,7 @@ Return a JSON array of objects with the following properties:
 - category: string (e.g. "Milk", "Bread", "Sugar", "Beverages", "Food & Groceries", "General Merchandise")
 - fractional_quantity_allowed: boolean (true if sold by weight like kg/g or volume like L/ml)`;
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.8-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json",
@@ -2485,7 +2500,7 @@ Return a JSON object with:
 - stockAlertMessage: string (direct guidance on what to restock first)
 - profitabilityScore: number (1 to 100)`;
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.8-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json",
@@ -2531,7 +2546,7 @@ async function chatWithAIAssistant(message, businessContext) {
   if (ai) {
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.8-flash",
         contents: message,
         config: {
           systemInstruction: `You are BRISK AI, an expert Kenyan retail assistant for "${businessContext.businessName}".
@@ -2566,7 +2581,7 @@ Notes: ${params.extraNotes || ""}
 
 Return only the plain text message, no quotes, no commentary.`;
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.8-flash",
         contents: prompt
       });
       if (response.text) {
@@ -2744,7 +2759,7 @@ apiRouter.use((req, res, next) => {
   }
   next();
 });
-apiRouter.post("/auth/register-business", (req, res) => {
+apiRouter.post("/auth/register-business", async (req, res) => {
   try {
     const {
       fullName,
@@ -2867,15 +2882,24 @@ apiRouter.post("/auth/register-business", (req, res) => {
       shortcode: "174379",
       active: true
     });
-    db.logAction({
-      business_id: businessId,
-      user_id: user.id,
-      user_name: finalOwnerName,
-      action: "business_registered",
-      resource_type: "business",
-      resource_id: businessId,
-      metadata: { businessName: finalBizName, category }
-    });
+    try {
+      if (finalEmail && password) {
+        await supabaseAdmin.auth.admin.createUser({
+          email: finalEmail,
+          password,
+          email_confirm: true,
+          user_metadata: {
+            full_name: finalOwnerName,
+            phone: finalPhone,
+            role: "owner",
+            business_id: businessId,
+            business_name: finalBizName
+          }
+        });
+      }
+    } catch (sbErr) {
+      console.warn("[SUPABASE AUTH NOTICE]:", sbErr?.message || sbErr);
+    }
     return res.status(201).json({
       success: true,
       user,
@@ -3044,13 +3068,50 @@ ${message}`,
     return res.status(500).json({ error: err.message || "Failed to submit contact request." });
   }
 });
-apiRouter.post("/auth/login", (req, res) => {
+apiRouter.post("/auth/login", async (req, res) => {
   const { identifier, email, phone, password } = req.body;
   const query = (identifier || email || phone || "").trim();
   if (!query || !password) {
     return res.status(400).json({ error: "Invalid email or password." });
   }
-  const user = db.getProfileByEmail(query) || db.getProfileByPhone(query);
+  const trimmedPwd = password.trim();
+  let sbAuthValid = false;
+  if (query.includes("@")) {
+    try {
+      const { data: sbData } = await supabaseClient.auth.signInWithPassword({
+        email: query,
+        password: trimmedPwd
+      });
+      if (sbData?.session?.access_token) {
+        sbAuthValid = true;
+      }
+    } catch {
+    }
+  }
+  let user = db.getProfileByEmail(query) || db.getProfileByPhone(query);
+  if (!user && sbAuthValid) {
+    try {
+      const { data: userList } = await supabaseAdmin.auth.admin.listUsers();
+      const sbU = userList?.users?.find((u) => u.email?.toLowerCase() === query.toLowerCase());
+      if (sbU) {
+        const meta = sbU.user_metadata || {};
+        const recovered = {
+          id: sbU.id,
+          email: sbU.email || query,
+          phone: meta.phone || "",
+          full_name: meta.full_name || "Store Owner",
+          password: trimmedPwd,
+          password_hash: hashString(trimmedPwd),
+          email_verified: true,
+          created_at: sbU.created_at || (/* @__PURE__ */ new Date()).toISOString(),
+          updated_at: (/* @__PURE__ */ new Date()).toISOString()
+        };
+        db.createProfile(recovered);
+        user = recovered;
+      }
+    } catch {
+    }
+  }
   if (!user) {
     db.recordLoginActivity({
       user_id: "unknown",
@@ -3059,11 +3120,10 @@ apiRouter.post("/auth/login", (req, res) => {
     });
     return res.status(401).json({ error: "Invalid email or password." });
   }
-  const trimmedPwd = password.trim();
   const matchPlain = user.password && user.password === trimmedPwd;
   const matchHash = user.password_hash && user.password_hash === hashString(trimmedPwd);
   const matchAdmin = user.is_super_admin && (trimmedPwd === "Admin123!" || trimmedPwd === "admin123");
-  if (!matchPlain && !matchHash && !matchAdmin) {
+  if (!sbAuthValid && !matchPlain && !matchHash && !matchAdmin) {
     db.recordLoginActivity({
       user_id: user.id,
       email: user.email,
@@ -4541,6 +4601,95 @@ apiRouter.get("/products", (req, res) => {
     }
   }
   return res.json(products);
+});
+apiRouter.get("/public/products/:id", (req, res) => {
+  const targetId = req.params.id;
+  const product = db.getProductById(targetId);
+  if (!product) {
+    return res.status(404).json({ error: "Product not found on shelf catalog" });
+  }
+  const business = db.getBusinessById(product.business_id);
+  return res.json({
+    success: true,
+    product,
+    business: business ? {
+      id: business.id,
+      name: business.name,
+      currency: business.currency,
+      location: business.location,
+      category: business.category
+    } : null
+  });
+});
+apiRouter.post("/public/products/self-checkout", async (req, res) => {
+  try {
+    const { productId, businessId, quantity = 1, phone, customerName = "Customer" } = req.body;
+    if (!productId || !phone) {
+      return res.status(400).json({ error: "Product ID and customer phone number are required" });
+    }
+    const product = db.getProductById(productId, businessId);
+    if (!product) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+    const business = db.getBusinessById(product.business_id);
+    const normalizedPhone = normalizePhoneNumber(phone);
+    const totalAmount = (Number(product.selling_price) || 0) * Number(quantity);
+    const saleId = generateId("sale_self");
+    const saleNumber = `SC-${Date.now().toString().slice(-6)}`;
+    const now = (/* @__PURE__ */ new Date()).toISOString();
+    const sale = {
+      id: saleId,
+      business_id: product.business_id,
+      customer_name: customerName,
+      customer_phone: normalizedPhone,
+      worker_id: "self_checkout",
+      worker_name: "Self-Checkout Scanner",
+      sale_number: saleNumber,
+      subtotal: totalAmount,
+      tax: 0,
+      discount: 0,
+      total: totalAmount,
+      status: "completed",
+      payment_method: "mpesa",
+      payment_status: "PENDING",
+      items: [
+        {
+          id: generateId("sitem"),
+          sale_id: saleId,
+          product_id: product.id,
+          product_name_snapshot: product.name,
+          quantity: Number(quantity),
+          unit_price: product.selling_price,
+          discount: 0,
+          tax: 0,
+          total: totalAmount,
+          created_at: now
+        }
+      ],
+      created_at: now,
+      updated_at: now
+    };
+    db.createSale(sale);
+    const stkResult = await MpesaService.initiateStkPush({
+      businessId: product.business_id,
+      phone: normalizedPhone,
+      amount: totalAmount,
+      saleId,
+      accountReference: saleNumber,
+      transactionDesc: `Payment for ${product.name.slice(0, 15)}`
+    });
+    return res.json({
+      success: true,
+      saleId,
+      saleNumber,
+      amount: totalAmount,
+      currency: business?.currency || "KES",
+      message: `M-Pesa STK push sent to ${maskPhoneNumber(normalizedPhone)} for KES ${totalAmount.toLocaleString()}. Please enter your PIN.`,
+      stkResult
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message || "Failed to initiate self-checkout" });
+  }
 });
 apiRouter.post("/products", (req, res) => {
   const businessId = req.businessId;

@@ -23,11 +23,14 @@ import {
   Store,
   RefreshCw,
   Box,
-  ChevronDown
+  ChevronDown,
+  QrCode,
+  Printer
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api, axiosInstance } from '../services/api';
 import { Product, Category, Brand, ProductVatType } from '../types';
+import { ShelfLabelStudioModal } from '../components/ShelfLabelStudioModal';
 
 export const ProductsPage: React.FC = () => {
   const { activeBusiness, member } = useAuth();
@@ -54,6 +57,8 @@ export const ProductsPage: React.FC = () => {
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [brandModalOpen, setBrandModalOpen] = useState(false);
   const [aiModalOpen, setAiModalOpen] = useState(false);
+  const [shelfStudioOpen, setShelfStudioOpen] = useState(false);
+  const [initialLabelProductId, setInitialLabelProductId] = useState<string | undefined>(undefined);
 
   // Product Form State
   const [isService, setIsService] = useState(false);
@@ -511,7 +516,18 @@ export const ProductsPage: React.FC = () => {
         </div>
 
         {canManageProducts && (
-          <div className="flex items-center gap-2.5 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <button
+              onClick={() => {
+                setInitialLabelProductId(undefined);
+                setShelfStudioOpen(true);
+              }}
+              className="flex-1 sm:flex-none px-3.5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+            >
+              <QrCode className="w-4 h-4 text-blue-400" />
+              <span>QR Shelf Labels</span>
+            </button>
+
             <button
               onClick={() => {
                 setAiStep('input');
@@ -740,8 +756,18 @@ export const ProductsPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Action Buttons: [Edit] [Stock] */}
+                  {/* Action Buttons: [QR Label] [Details] [Edit] [Stock] */}
                   <div className="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
+                    <button
+                      onClick={() => {
+                        setInitialLabelProductId(p.id);
+                        setShelfStudioOpen(true);
+                      }}
+                      title="Print QR Shelf Label"
+                      className="p-1.5 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-600 rounded-lg text-xs font-semibold cursor-pointer"
+                    >
+                      <QrCode className="w-3.5 h-3.5" />
+                    </button>
                     <button
                       onClick={() => setDetailsProduct(p)}
                       className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold cursor-pointer"
@@ -872,6 +898,16 @@ export const ProductsPage: React.FC = () => {
                         {/* Actions */}
                         <td className="py-3 px-4 text-right">
                           <div className="flex justify-end items-center gap-1.5">
+                            <button
+                              onClick={() => {
+                                setInitialLabelProductId(p.id);
+                                setShelfStudioOpen(true);
+                              }}
+                              title="Print QR Shelf Label"
+                              className="p-1 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer"
+                            >
+                              <QrCode className="w-3.5 h-3.5" />
+                            </button>
                             <button
                               onClick={() => setDetailsProduct(p)}
                               title="View Product Details"
@@ -1850,6 +1886,15 @@ export const ProductsPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* QR Code Shelf Label Generator Studio Modal */}
+      <ShelfLabelStudioModal
+        isOpen={shelfStudioOpen}
+        onClose={() => setShelfStudioOpen(false)}
+        products={products}
+        activeBusiness={activeBusiness}
+        initialSelectedProductId={initialLabelProductId}
+      />
     </div>
   );
 };

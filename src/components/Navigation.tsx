@@ -21,7 +21,8 @@ import {
   Store,
   LogOut,
   Clock,
-  ArrowRight
+  ArrowRight,
+  QrCode
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -71,6 +72,12 @@ export const Navigation: React.FC<NavigationProps> = ({ currentPath, onNavigate 
       label: 'Products',
       path: '/products',
       icon: Package,
+      visible: isOwner || isManager || isSuperAdmin || isCashier || isSales,
+    },
+    {
+      label: 'Shelf Labels',
+      path: '/labels',
+      icon: QrCode,
       visible: isOwner || isManager || isSuperAdmin || isCashier || isSales,
     },
     {

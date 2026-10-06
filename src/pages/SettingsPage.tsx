@@ -15,7 +15,12 @@ import {
   HelpCircle,
   ExternalLink,
   Info,
-  CreditCard
+  CreditCard,
+  Database,
+  Copy,
+  Check,
+  Download,
+  Code
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
@@ -24,7 +29,8 @@ import { Business, MpesaConfig, SmsConfig, CustomerNotification } from '../types
 export const SettingsPage: React.FC = () => {
   const { activeBusiness, updateActiveBusiness } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'business' | 'tax' | 'sms' | 'mpesa'>('business');
+  const [activeTab, setActiveTab] = useState<'business' | 'tax' | 'sms' | 'mpesa' | 'database'>('business');
+  const [sqlCopied, setSqlCopied] = useState(false);
 
   // Business Form State
   const [name, setName] = useState(activeBusiness?.name || '');
@@ -310,12 +316,24 @@ export const SettingsPage: React.FC = () => {
             <span>M-Pesa Gateway Credentials</span>
           </button>
 
+          <button
+            onClick={() => setActiveTab('database')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 ${
+              activeTab === 'database'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
+            }`}
+          >
+            <Database className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Supabase Database &amp; SQL</span>
+          </button>
+
           <a
             href="/settings/payments"
             className="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 shadow-2xs"
           >
             <CreditCard className="w-3.5 h-3.5 text-blue-600" />
-            <span>Payment Methods (M-Pesa, Card, Bank)</span>
+            <span>Payment Methods</span>
             <ExternalLink className="w-3 h-3 ml-0.5 opacity-60" />
           </a>
         </div>
@@ -893,6 +911,194 @@ export const SettingsPage: React.FC = () => {
             </button>
           </div>
         </form>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 5. SUPABASE DATABASE & SQL MIGRATION TAB */}
+      {/* ========================================================================= */}
+      {activeTab === 'database' && (
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-5">
+          <div className="flex flex-wrap items-start justify-between gap-3 pb-4 border-b border-slate-100">
+            <div>
+              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Database className="w-5 h-5 text-emerald-600" />
+                <span>Supabase PostgreSQL Production Schema &amp; SQL</span>
+              </h2>
+              <p className="text-xs text-slate-500 mt-1">
+                Run this SQL script in your <strong>Supabase SQL Editor</strong> to create all tables, indexes, RLS policies, and admin accounts.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  fetch('/supabase_schema.sql')
+                    .then(r => r.text())
+                    .then(sql => {
+                      navigator.clipboard.writeText(sql);
+                      setSqlCopied(true);
+                      setTimeout(() => setSqlCopied(false), 2500);
+                    })
+                    .catch(() => {
+                      setSqlCopied(true);
+                      setTimeout(() => setSqlCopied(false), 2500);
+                    });
+                }}
+                className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+              >
+                {sqlCopied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                <span>{sqlCopied ? 'SQL Copied!' : 'Copy Entire SQL'}</span>
+              </button>
+
+              <a
+                href="/supabase_schema.sql"
+                download="supabase_schema.sql"
+                className="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <Download className="w-4 h-4 text-emerald-600" />
+                <span>Download .sql File</span>
+              </a>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Step 1: Open Supabase</span>
+              <p className="text-slate-700 font-medium leading-relaxed">
+                Log in to your dashboard at <strong>https://supabase.com</strong> and select your project.
+              </p>
+            </div>
+
+            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Step 2: SQL Editor</span>
+              <p className="text-slate-700 font-medium leading-relaxed">
+                Click on <strong>SQL Editor</strong> on the left sidebar &amp; click <strong>New Query</strong>.
+              </p>
+            </div>
+
+            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Step 3: Paste &amp; Run</span>
+              <p className="text-slate-700 font-medium leading-relaxed">
+                Paste the SQL from below or the file, and click the green <strong>Run</strong> button.
+              </p>
+            </div>
+          </div>
+
+          {/* Quick SQL Preview Box */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs text-slate-500">
+              <span className="font-semibold flex items-center gap-1">
+                <Code className="w-3.5 h-3.5 text-blue-600" />
+                <span>SQL Schema Script Preview (supabase_schema.sql)</span>
+              </span>
+              <span className="font-mono text-[11px] text-slate-400">PostgreSQL 15+ Compatible</span>
+            </div>
+
+            <pre className="p-4 bg-slate-950 text-slate-200 font-mono text-xs rounded-xl overflow-x-auto max-h-96 border border-slate-800 leading-relaxed scrollbar-thin">
+{`-- ============================================================================
+-- BRISK SMART BILLING & POS - SUPABASE POSTGRESQL PRODUCTION SCHEMA
+-- Run this in Supabase SQL Editor: https://uztxsjbmugfbhgedpmpe.supabase.co
+-- ============================================================================
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- 1. Profiles & Admin
+CREATE TABLE IF NOT EXISTS public.profiles (
+    id TEXT PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    phone TEXT,
+    full_name TEXT NOT NULL,
+    password_hash TEXT,
+    avatar_url TEXT,
+    is_super_admin BOOLEAN DEFAULT FALSE,
+    email_verified BOOLEAN DEFAULT TRUE,
+    mfa_enabled BOOLEAN DEFAULT FALSE,
+    last_login_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 2. Businesses / Stores
+CREATE TABLE IF NOT EXISTS public.businesses (
+    id TEXT PRIMARY KEY,
+    owner_id TEXT REFERENCES public.profiles(id) ON DELETE SET NULL,
+    name TEXT NOT NULL,
+    slug TEXT UNIQUE,
+    category TEXT DEFAULT 'Retail & Supermarket',
+    phone TEXT,
+    email TEXT,
+    location TEXT DEFAULT 'Nairobi, Kenya',
+    currency TEXT DEFAULT 'KES',
+    status TEXT DEFAULT 'active',
+    tax_percentage NUMERIC(5, 2) DEFAULT 16.00,
+    vat_enabled BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 3. Products & Stock
+CREATE TABLE IF NOT EXISTS public.products (
+    id TEXT PRIMARY KEY,
+    business_id TEXT NOT NULL REFERENCES public.businesses(id) ON DELETE CASCADE,
+    category_id TEXT,
+    category_name TEXT,
+    brand_id TEXT,
+    brand_name TEXT,
+    name TEXT NOT NULL,
+    variant TEXT,
+    size TEXT,
+    unit TEXT DEFAULT 'piece',
+    sku TEXT,
+    barcode TEXT,
+    buying_price NUMERIC(12, 2) DEFAULT 0.00,
+    selling_price NUMERIC(12, 2) NOT NULL,
+    vat_type TEXT DEFAULT 'default',
+    stock_quantity NUMERIC(12, 3) DEFAULT 0.000,
+    low_stock_threshold NUMERIC(12, 3) DEFAULT 10.000,
+    image_url TEXT,
+    description TEXT,
+    active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 4. Sales & Orders
+CREATE TABLE IF NOT EXISTS public.sales (
+    id TEXT PRIMARY KEY,
+    business_id TEXT NOT NULL REFERENCES public.businesses(id) ON DELETE CASCADE,
+    receipt_number TEXT NOT NULL,
+    customer_name TEXT,
+    customer_phone TEXT,
+    subtotal NUMERIC(12, 2) NOT NULL,
+    total_amount NUMERIC(12, 2) NOT NULL,
+    payment_method TEXT DEFAULT 'cash',
+    payment_status TEXT DEFAULT 'paid',
+    status TEXT DEFAULT 'completed',
+    items JSONB DEFAULT '[]'::JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 5. Payments & M-Pesa Transactions
+CREATE TABLE IF NOT EXISTS public.payments (
+    id TEXT PRIMARY KEY,
+    business_id TEXT NOT NULL REFERENCES public.businesses(id) ON DELETE CASCADE,
+    sale_id TEXT,
+    amount NUMERIC(12, 2) NOT NULL,
+    currency TEXT DEFAULT 'KES',
+    payment_method TEXT NOT NULL,
+    status TEXT NOT NULL,
+    mpesa_receipt_number TEXT,
+    phone_number TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- (Full schema script with all 20+ tables is in /supabase_schema.sql)`}
+            </pre>
+          </div>
+        </div>
       )}
     </div>
   );
