@@ -276,10 +276,19 @@ export const RegisterBusinessPage: React.FC<RegisterBusinessPageProps> = ({ onSu
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-md shadow-blue-500/20 transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-md shadow-blue-500/20 transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
           >
-            <span>{loading ? 'Creating Account & Setting Up Store...' : 'Complete Registration & Start Free Trial'}</span>
-            <ArrowRight className="w-4 h-4" />
+            {loading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Setting Up Your Store...</span>
+              </>
+            ) : (
+              <>
+                <span>Complete Registration & Start Free Trial</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </button>
 
           {/* Connection to Login Form */}

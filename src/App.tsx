@@ -127,11 +127,10 @@ function AppContent() {
     }
   }, [user, cleanPath, getDefaultPath, getAndClearRedirectPath, navigate]);
 
-  // Determine if the current route is publicly accessible
+  // Determine if the current route is publicly accessible (if user is authenticated, /login and /register-business switch directly to back-office layout)
   const isPublicRoute =
+    !user && (cleanPath === '/login' || cleanPath === '/register-business') ||
     cleanPath === '/' ||
-    cleanPath === '/login' ||
-    cleanPath === '/register-business' ||
     cleanPath === '/onboarding' ||
     cleanPath === '/contact' ||
     cleanPath.startsWith('/pay/') ||
@@ -231,75 +230,6 @@ function AppContent() {
 
   // 3. Authenticated Router: Maps every navigation route directly to its corresponding page component
   const renderAuthenticatedPage = () => {
-    // If transitioning, render instantaneous contextual skeleton feedback
-    if (isTransitioning) {
-      switch (cleanPath) {
-        case '/worker/dashboard':
-        case '/dashboard':
-          return <PageSkeleton pageTitle="Dashboard Overview" variant="dashboard" />;
-
-        case '/pos':
-        case '/sales/new':
-        case '/worker/sales/new':
-          return <PageSkeleton pageTitle="Point of Sale Terminal" variant="pos" />;
-
-        case '/products':
-          return <PageSkeleton pageTitle="Products & Inventory Catalog" variant="table" />;
-
-        case '/labels':
-        case '/product-labels':
-          return <PageSkeleton pageTitle="Product Labels & Shelf Tag Studio" variant="form" />;
-
-        case '/inventory':
-          return <PageSkeleton pageTitle="Stock Levels & Movements" variant="table" />;
-
-        case '/workers':
-          return <PageSkeleton pageTitle="Staff & Cashiers" variant="table" />;
-
-        case '/customers':
-          return <PageSkeleton pageTitle="Customer Accounts" variant="table" />;
-
-        case '/sales':
-        case '/transactions':
-          return <PageSkeleton pageTitle="Sales Transactions" variant="table" />;
-
-        case '/receipts':
-          return <PageSkeleton pageTitle="Receipts & Invoices" variant="table" />;
-
-        case '/reports':
-          return <PageSkeleton pageTitle="Financial & Sales Reports" variant="dashboard" />;
-
-        case '/expenses':
-          return <PageSkeleton pageTitle="Business Expenses" variant="table" />;
-
-        case '/subscription':
-        case '/subscriptions':
-          return <PageSkeleton pageTitle="Subscription & Billing" variant="form" />;
-
-        case '/settings/payments':
-        case '/payments/settings':
-        case '/payment-methods':
-          return <PageSkeleton pageTitle="Payment Gateways & Methods" variant="form" />;
-
-        case '/payments/bank-transfers':
-        case '/bank-transfers':
-        case '/settings/bank-transfers':
-          return <PageSkeleton pageTitle="Bank Transfer Approvals" variant="table" />;
-
-        case '/support':
-          return <PageSkeleton pageTitle="Support Center & Tickets" variant="table" />;
-
-        case '/admin':
-          return <PageSkeleton pageTitle="Platform Administration" variant="dashboard" />;
-
-        default:
-          if (cleanPath.startsWith('/settings')) {
-            return <PageSkeleton pageTitle="Store Settings" variant="form" />;
-          }
-          return <PageSkeleton pageTitle="Loading page..." variant="default" />;
-      }
-    }
-
     // Explicit and deterministic route matching
     switch (cleanPath) {
       case '/login':
