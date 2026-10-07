@@ -19,7 +19,7 @@ interface LoginPageProps {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onSuccess }) => {
-  const { login } = useAuth();
+  const { login, user, getDefaultPath } = useAuth();
 
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -35,6 +35,18 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onSuccess }) =
   const [forgotModalOpen, setForgotModalOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSent, setForgotSent] = useState(false);
+
+  // If already logged in, route immediately
+  useEffect(() => {
+    if (user) {
+      const dest = getDefaultPath();
+      if (onSuccess) {
+        onSuccess(dest);
+      } else {
+        onNavigate(dest);
+      }
+    }
+  }, [user, getDefaultPath, onSuccess, onNavigate]);
 
   // Check if just registered
   useEffect(() => {

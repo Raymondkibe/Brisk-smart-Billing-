@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Store,
   User,
@@ -22,7 +22,7 @@ interface RegisterBusinessPageProps {
 }
 
 export const RegisterBusinessPage: React.FC<RegisterBusinessPageProps> = ({ onSuccess, onNavigate }) => {
-  const { registerBusiness } = useAuth();
+  const { registerBusiness, user } = useAuth();
 
   const [businessName, setBusinessName] = useState('');
   const [ownerName, setOwnerName] = useState('');
@@ -38,6 +38,12 @@ export const RegisterBusinessPage: React.FC<RegisterBusinessPageProps> = ({ onSu
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      onSuccess();
+    }
+  }, [user, onSuccess]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

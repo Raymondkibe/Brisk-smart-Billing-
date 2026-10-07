@@ -121,17 +121,17 @@ function AppContent() {
   // Automatic immediate transition: If user session is established while on /login or /register-business,
   // immediately route to dashboard without stalling.
   useEffect(() => {
-    if (!loading && user && (cleanPath === '/login' || cleanPath === '/register-business')) {
+    if (user && (cleanPath === '/login' || cleanPath === '/register-business')) {
       const dest = getAndClearRedirectPath() || getDefaultPath();
       navigate(dest, { replace: true, force: true });
     }
-  }, [loading, user, cleanPath, getDefaultPath, getAndClearRedirectPath, navigate]);
+  }, [user, cleanPath, getDefaultPath, getAndClearRedirectPath, navigate]);
 
-  // Determine if the current route is publicly accessible (if authenticated, login/register routes transition to app)
+  // Determine if the current route is publicly accessible
   const isPublicRoute =
     cleanPath === '/' ||
-    (!user && cleanPath === '/login') ||
-    (!user && cleanPath === '/register-business') ||
+    cleanPath === '/login' ||
+    cleanPath === '/register-business' ||
     cleanPath === '/onboarding' ||
     cleanPath === '/contact' ||
     cleanPath.startsWith('/pay/') ||
@@ -302,6 +302,13 @@ function AppContent() {
 
     // Explicit and deterministic route matching
     switch (cleanPath) {
+      case '/login':
+      case '/register-business':
+        if ((isCashier || isSales) && !isOwner && !isSuperAdmin) {
+          return <WorkerDashboardPage onNavigate={navigate} />;
+        }
+        return <DashboardPage onNavigate={navigate} />;
+
       case '/worker/dashboard':
         return <WorkerDashboardPage onNavigate={navigate} />;
 

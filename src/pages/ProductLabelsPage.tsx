@@ -24,7 +24,9 @@ import {
   Sparkles,
   Info,
   CheckCircle2,
-  Share2
+  Share2,
+  Settings2,
+  Barcode
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Product, Business, Category, Brand } from '../types';
@@ -33,6 +35,7 @@ import { api } from '../services/api';
 
 export type LabelPreset =
   | 'shelf_standard'
+  | 'barcode_small'
   | 'compact_tag'
   | 'large_promo'
   | 'sheet_a4_21'
@@ -60,19 +63,26 @@ export const ProductLabelsPage: React.FC<ProductLabelsPageProps> = ({ onNavigate
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedStockStatus, setSelectedStockStatus] = useState<'all' | 'in_stock' | 'low_stock'>('all');
 
-  // Design & Preset Settings
+  // Design & Size Settings
   const [preset, setPreset] = useState<LabelPreset>('shelf_standard');
   const [targetMode, setTargetMode] = useState<QrTargetMode>('add_to_cart');
   const [promoText, setPromoText] = useState('');
   const [customFooter, setCustomFooter] = useState('');
 
-  // Toggles
-  const [showBusinessName, setShowBusinessName] = useState(true);
-  const [showCategory, setShowCategory] = useState(true);
+  // Customizable Field Toggles
+  const [showName, setShowName] = useState(true);
+  const [showPrice, setShowPrice] = useState(true);
+  const [showSku, setShowSku] = useState(true);
   const [showBarcodeText, setShowBarcodeText] = useState(true);
   const [showUnit, setShowUnit] = useState(true);
-  const [showCutGuides, setShowCutGuides] = useState(true);
+  const [showBusinessName, setShowBusinessName] = useState(true);
+  const [showCategory, setShowCategory] = useState(true);
   const [showVatNote, setShowVatNote] = useState(true);
+  const [showCutGuides, setShowCutGuides] = useState(true);
+  const [showQrCode, setShowQrCode] = useState(true);
+
+  // Settings drawer / panel collapse state
+  const [settingsPanelOpen, setSettingsPanelOpen] = useState(true);
 
   // View state
   const [previewTab, setPreviewTab] = useState<'sheet' | 'single'>('sheet');
@@ -235,22 +245,25 @@ export const ProductLabelsPage: React.FC<ProductLabelsPageProps> = ({ onNavigate
   // Download single label as high-res PNG
   const handleDownloadLabelPng = (product: Product) => {
     const svgElement = document.getElementById(`qr-svg-canvas-${product.id}`);
-    if (!svgElement) {
+    if (!svgElement && showQrCode) {
       showToast('Preparing QR canvas image...');
       return;
     }
 
     try {
-      const svgData = new XMLSerializer().serializeToString(svgElement);
-      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-      const URL = window.URL || window.webkitURL || window;
-      const blobURL = URL.createObjectURL(svgBlob);
+      const isSmall = preset === 'barcode_small';
+      const canvasWidth = isSmall ? 480 : 720;
+      const canvasHeight = isSmall ? 300 : 440;
 
-      const image = new Image();
-      image.onload = () => {
+      const svgData = svgElement ? new XMLSerializer().serializeToString(svgElement) : '';
+      const svgBlob = svgData ? new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' }) : null;
+      const URL = window.URL || window.webkitURL || window;
+      const blobURL = svgBlob ? URL.createObjectURL(svgBlob) : '';
+
+      const renderCanvas = (image?: HTMLImageElement) => {
         const canvas = document.createElement('canvas');
-        canvas.width = 720;
-        canvas.height = 440;
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
@@ -260,98 +273,131 @@ export const ProductLabelsPage: React.FC<ProductLabelsPageProps> = ({ onNavigate
 
         // Border
         ctx.strokeStyle = '#0F172A';
-        ctx.lineWidth = 4;
-        ctx.strokeRect(12, 12, canvas.width - 24, canvas.height - 24);
+        ctx.lineWidth = 3;
+        ctx.strokeRect(8, 8, canvas.width - 16, canvas.height - 16);
+
+        let curY = 24;
 
         // Promo Banner if present
         if (promoText.trim()) {
           ctx.fillStyle = '#DC2626';
-          ctx.fillRect(12, 12, canvas.width - 24, 38);
+          ctx.fillRect(8, 8, canvas.width - 16, 32);
           ctx.fillStyle = '#FFFFFF';
-          ctx.font = 'bold 16px sans-serif';
+          ctx.font = 'bold 14px sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText(promoText.toUpperCase(), canvas.width / 2, 36);
+          ctx.fillText(promoText.toUpperCase(), canvas.width / 2, 30);
           ctx.textAlign = 'left';
+          curY += 28;
         }
-
-        const topOffset = promoText.trim() ? 50 : 20;
 
         // Business Header
         if (showBusinessName) {
           ctx.fillStyle = '#475569';
-          ctx.font = 'bold 16px sans-serif';
-          ctx.fillText((activeBusiness?.name || 'BRISK STORE').toUpperCase(), 32, topOffset + 24);
+          ctx.font = 'bold 14px sans-serif';
+          ctx.fillText((activeBusiness?.name || 'BRISK STORE').toUpperCase(), 24, curY);
+          curY += 20;
         }
 
         // Category / Brand
         if (showCategory) {
           ctx.fillStyle = '#64748B';
-          ctx.font = '14px sans-serif';
+          ctx.font = '12px sans-serif';
           const cat = [product.brand_name, product.category_name].filter(Boolean).join(' · ');
-          if (cat) ctx.fillText(cat, 32, topOffset + 48);
+          if (cat) {
+            ctx.fillText(cat, 24, curY);
+            curY += 20;
+          }
         }
 
         // Product Title
-        ctx.fillStyle = '#0F172A';
-        ctx.font = 'bold 28px sans-serif';
-        const nameLines = product.name.length > 22 ? product.name.substring(0, 20) + '...' : product.name;
-        ctx.fillText(nameLines, 32, topOffset + 96);
+        if (showName) {
+          ctx.fillStyle = '#0F172A';
+          ctx.font = isSmall ? 'bold 20px sans-serif' : 'bold 26px sans-serif';
+          const maxChars = isSmall ? 18 : 22;
+          const nameLines = product.name.length > maxChars ? product.name.substring(0, maxChars - 2) + '...' : product.name;
+          ctx.fillText(nameLines, 24, curY + 12);
+          curY += 36;
+        }
 
         // Price Section
-        ctx.fillStyle = '#0284C7';
-        ctx.font = 'bold 24px monospace';
-        ctx.fillText(activeBusiness?.currency || 'KES', 32, topOffset + 160);
+        if (showPrice) {
+          ctx.fillStyle = '#0284C7';
+          ctx.font = isSmall ? 'bold 18px monospace' : 'bold 22px monospace';
+          ctx.fillText(activeBusiness?.currency || 'KES', 24, curY + 20);
 
-        ctx.fillStyle = '#0F172A';
-        ctx.font = 'bold 54px monospace';
-        ctx.fillText(Number(product.selling_price).toLocaleString(), 105, topOffset + 165);
+          ctx.fillStyle = '#0F172A';
+          ctx.font = isSmall ? 'bold 38px monospace' : 'bold 50px monospace';
+          const priceX = isSmall ? 80 : 95;
+          ctx.fillText(Number(product.selling_price).toLocaleString(), priceX, curY + 24);
+          curY += 44;
+        }
 
         // Unit
         if (showUnit && product.unit) {
           ctx.fillStyle = '#64748B';
-          ctx.font = 'bold 18px sans-serif';
-          ctx.fillText(`/ ${product.unit}`, 32, topOffset + 205);
+          ctx.font = 'bold 14px sans-serif';
+          ctx.fillText(`/ ${product.unit}`, 24, curY);
+          curY += 22;
         }
 
-        // Barcode / SKU
-        if (showBarcodeText && (product.barcode || product.sku)) {
+        // SKU inclusion
+        if (showSku && product.sku) {
+          ctx.fillStyle = '#475569';
+          ctx.font = 'bold 12px monospace';
+          ctx.fillText(`SKU: ${product.sku}`, 24, curY + 10);
+          curY += 20;
+        }
+
+        // Barcode text inclusion
+        if (showBarcodeText && product.barcode) {
           ctx.fillStyle = '#64748B';
-          ctx.font = '14px monospace';
-          const codeStr = product.barcode ? `BARCODE: ${product.barcode}` : `SKU: ${product.sku}`;
-          ctx.fillText(codeStr, 32, topOffset + 265);
+          ctx.font = '12px monospace';
+          ctx.fillText(`BARCODE: ${product.barcode}`, 24, curY + 10);
+          curY += 20;
         }
 
         // VAT Note
         if (showVatNote) {
           ctx.fillStyle = '#94A3B8';
-          ctx.font = '12px sans-serif';
-          ctx.fillText('Tax Inclusive (16% VAT)', 32, topOffset + 295);
+          ctx.font = '11px sans-serif';
+          ctx.fillText('Tax Inclusive (16% VAT)', 24, curY + 10);
         }
 
         // Draw QR Code Image on right side
-        ctx.drawImage(image, 460, topOffset + 40, 220, 220);
+        if (showQrCode && image) {
+          const qrSize = isSmall ? 140 : 190;
+          const qrX = canvasWidth - qrSize - 24;
+          const qrY = promoText.trim() ? 50 : 30;
+          ctx.drawImage(image, qrX, qrY, qrSize, qrSize);
 
-        // Scan call to action
-        ctx.fillStyle = '#0284C7';
-        ctx.font = 'bold 12px sans-serif';
-        ctx.textAlign = 'center';
-        const ctaText =
-          targetMode === 'add_to_cart'
-            ? 'SCAN TO ADD TO CART'
-            : targetMode === 'product_details'
-            ? 'SCAN FOR DETAILS & SPECS'
-            : 'BARCODE SCANNER';
-        ctx.fillText(ctaText, 570, topOffset + 285);
+          ctx.fillStyle = '#0284C7';
+          ctx.font = 'bold 11px sans-serif';
+          ctx.textAlign = 'center';
+          const ctaText =
+            targetMode === 'add_to_cart'
+              ? 'SCAN TO ADD TO CART'
+              : targetMode === 'product_details'
+              ? 'SCAN FOR DETAILS'
+              : 'BARCODE';
+          ctx.fillText(ctaText, qrX + qrSize / 2, qrY + qrSize + 18);
+        }
 
         // Download link
         const a = document.createElement('a');
         a.download = `label-${product.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${product.id.slice(-4)}.png`;
         a.href = canvas.toDataURL('image/png');
         a.click();
-        URL.revokeObjectURL(blobURL);
+        if (blobURL) URL.revokeObjectURL(blobURL);
         showToast(`Downloaded PNG label for ${product.name}`);
       };
-      image.src = blobURL;
+
+      if (blobURL) {
+        const image = new Image();
+        image.onload = () => renderCanvas(image);
+        image.src = blobURL;
+      } else {
+        renderCanvas();
+      }
     } catch (err) {
       console.error('Download PNG failed:', err);
       showToast('Could not download label. Try printing directly.');
@@ -363,6 +409,8 @@ export const ProductLabelsPage: React.FC<ProductLabelsPageProps> = ({ onNavigate
     switch (preset) {
       case 'shelf_standard':
         return 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
+      case 'barcode_small':
+        return 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5';
       case 'compact_tag':
         return 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3';
       case 'large_promo':
@@ -413,12 +461,20 @@ export const ProductLabelsPage: React.FC<ProductLabelsPageProps> = ({ onNavigate
               </span>
             </h1>
             <p className="text-xs text-slate-500">
-              Generate scannable shelf tags and price labels linking directly to active POS cart or product detail pages
+              Generate scannable shelf tags and price stickers linking directly to active POS cart or product detail pages
             </p>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          <button
+            onClick={() => setSettingsPanelOpen(!settingsPanelOpen)}
+            className="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <Settings2 className="w-4 h-4 text-slate-600" />
+            <span>{settingsPanelOpen ? 'Hide Settings' : 'Label Settings'}</span>
+          </button>
+
           <button
             onClick={handlePrint}
             disabled={totalLabelsCount === 0}
@@ -431,109 +487,182 @@ export const ProductLabelsPage: React.FC<ProductLabelsPageProps> = ({ onNavigate
       </div>
 
       {/* ========================================================================= */}
-      {/* 2. MAIN WORKSPACE: CONTROLS & PRODUCT PICKER (LEFT) + LIVE PREVIEW (RIGHT) */}
+      {/* 2. DEDICATED SETTINGS & CUSTOMIZATION PANEL */}
       {/* ========================================================================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* LEFT COLUMN: Controls & Product Selection (5 cols) */}
-        <div className="lg:col-span-5 space-y-5">
-          {/* Card A: Label Template & QR Action Settings */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                <Sliders className="w-3.5 h-3.5 text-blue-600" />
-                <span>1. Label Format & Action</span>
+      {settingsPanelOpen && (
+        <div className="bg-white p-5 rounded-2xl border border-blue-200 bg-linear-to-b from-blue-50/30 to-white shadow-xs space-y-5 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center justify-between border-b border-slate-200/80 pb-3">
+            <div className="flex items-center gap-2">
+              <Sliders className="w-4 h-4 text-blue-600" />
+              <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                Label Size Presets & Content Customization Settings
               </h2>
             </div>
+            <span className="text-[11px] text-blue-600 font-semibold">
+              Live updates applied to preview & print
+            </span>
+          </div>
 
-            {/* Target QR Action Mode */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-700">QR Code Action on Scan</label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setTargetMode('add_to_cart')}
-                  className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                    targetMode === 'add_to_cart'
-                      ? 'border-blue-600 bg-blue-50/60 text-blue-900'
-                      : 'border-slate-200 hover:border-slate-300 text-slate-700'
-                  }`}
-                >
-                  <div className="flex items-center gap-1.5 text-xs font-bold">
-                    <ShoppingCart className="w-3.5 h-3.5 text-blue-600" />
-                    <span>Add to Active Sale</span>
-                  </div>
-                  <p className="text-[10px] text-slate-500 mt-1">
-                    Adds item straight to cashier or mobile POS cart
-                  </p>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setTargetMode('product_details')}
-                  className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                    targetMode === 'product_details'
-                      ? 'border-blue-600 bg-blue-50/60 text-blue-900'
-                      : 'border-slate-200 hover:border-slate-300 text-slate-700'
-                  }`}
-                >
-                  <div className="flex items-center gap-1.5 text-xs font-bold">
-                    <Smartphone className="w-3.5 h-3.5 text-blue-600" />
-                    <span>Product Detail & Specs</span>
-                  </div>
-                  <p className="text-[10px] text-slate-500 mt-1">
-                    Customer self-checkout & info view
-                  </p>
-                </button>
-              </div>
+          {/* Preset Sizes Grid */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-800 block">
+              1. Choose Label Dimensions & Size Preset:
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2">
+              {[
+                { id: 'shelf_standard', label: 'Standard Shelf', size: '70 × 40 mm', icon: Tag },
+                { id: 'barcode_small', label: 'Small Barcode', size: '40 × 25 mm', icon: Barcode },
+                { id: 'compact_tag', label: 'Compact Tag', size: '50 × 30 mm', icon: Tag },
+                { id: 'large_promo', label: 'Promo / Deli', size: '90 × 60 mm', icon: Sparkles },
+                { id: 'sheet_a4_21', label: 'A4 Sheet 21-up', size: '3 × 7 Grid', icon: FileText },
+                { id: 'sheet_a4_24', label: 'A4 Sheet 24-up', size: '3 × 8 Grid', icon: FileText },
+                { id: 'thermal_roll', label: 'Thermal Roll', size: '58mm / 80mm', icon: Printer },
+              ].map(item => {
+                const isSelected = preset === item.id;
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setPreset(item.id as LabelPreset)}
+                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                      isSelected
+                        ? 'border-blue-600 bg-blue-600 text-white shadow-sm ring-2 ring-blue-600/30'
+                        : 'border-slate-200 bg-white hover:border-slate-300 text-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between w-full mb-1">
+                      <span className="text-xs font-bold leading-tight">{item.label}</span>
+                      <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-blue-200' : 'text-slate-400'}`} />
+                    </div>
+                    <span className={`text-[10px] font-mono ${isSelected ? 'text-blue-100' : 'text-slate-400'}`}>
+                      {item.size}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
+          </div>
 
-            {/* Preset Selector */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-700">Size & Sheet Layout</label>
-              <select
-                value={preset}
-                onChange={e => setPreset(e.target.value as LabelPreset)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-600/20"
-              >
-                <option value="shelf_standard">Standard Shelf Tag (70mm × 40mm)</option>
-                <option value="compact_tag">Compact Price Tag (50mm × 30mm)</option>
-                <option value="large_promo">Promotional / Deli Card (90mm × 60mm)</option>
-                <option value="sheet_a4_21">A4 Sheet Grid (21 Labels / Page - 3×7)</option>
-                <option value="sheet_a4_24">A4 Sheet Grid (24 Labels / Page - 3×8)</option>
-                <option value="thermal_roll">Continuous Thermal Roll (58mm / 80mm)</option>
-              </select>
-            </div>
-
-            {/* Promo Banner & Footer Text */}
-            <div className="grid grid-cols-2 gap-2.5 pt-1">
-              <div>
-                <label className="text-[11px] font-medium text-slate-600">Promo Badge (Optional)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. SPECIAL OFFER"
-                  value={promoText}
-                  onChange={e => setPromoText(e.target.value)}
-                  className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs"
-                />
-              </div>
-              <div>
-                <label className="text-[11px] font-medium text-slate-600">Custom Note</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Aisle 3 / Shelf B"
-                  value={customFooter}
-                  onChange={e => setCustomFooter(e.target.value)}
-                  className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs"
-                />
-              </div>
-            </div>
-
-            {/* Display Toggles */}
-            <div className="pt-2 border-t border-slate-100 space-y-2">
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                Visible Elements
+          {/* QR Action & Fields Toggle Section */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-5 pt-2 border-t border-slate-200/80">
+            {/* QR Action Target (5 cols) */}
+            <div className="md:col-span-5 space-y-2">
+              <label className="text-xs font-bold text-slate-800 block">
+                2. QR Code Destination on Scan:
               </label>
-              <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="space-y-1.5">
+                {[
+                  {
+                    id: 'add_to_cart',
+                    title: 'Instant Add to Active POS Cart',
+                    desc: 'Scanning QR automatically inserts item into cash register or mobile POS sale',
+                    icon: ShoppingCart,
+                  },
+                  {
+                    id: 'product_details',
+                    title: 'Public Product Detail & Specs',
+                    desc: 'Opens customer self-checkout, item description, and direct M-Pesa payment',
+                    icon: Smartphone,
+                  },
+                  {
+                    id: 'raw_barcode',
+                    title: 'Raw Barcode / SKU Value',
+                    desc: 'Encodes plain barcode string for traditional optical laser hand scanners',
+                    icon: Barcode,
+                  },
+                ].map(mode => (
+                  <label
+                    key={mode.id}
+                    onClick={() => setTargetMode(mode.id as QrTargetMode)}
+                    className={`p-2.5 rounded-xl border flex items-start gap-2.5 transition-all cursor-pointer ${
+                      targetMode === mode.id
+                        ? 'border-blue-600 bg-white shadow-2xs text-blue-900'
+                        : 'border-slate-200 bg-white/60 hover:bg-white text-slate-700'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="targetMode"
+                      checked={targetMode === mode.id}
+                      onChange={() => setTargetMode(mode.id as QrTargetMode)}
+                      className="mt-0.5 text-blue-600"
+                    />
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold">{mode.title}</p>
+                      <p className="text-[10px] text-slate-500 leading-tight mt-0.5">{mode.desc}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Content Field Checkboxes (7 cols) */}
+            <div className="md:col-span-7 space-y-2">
+              <label className="text-xs font-bold text-slate-800 block">
+                3. Customize Elements Included on Label:
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs bg-white p-3 rounded-xl border border-slate-200">
+                <label className="flex items-center gap-2 text-slate-700 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={showName}
+                    onChange={e => setShowName(e.target.checked)}
+                    className="w-3.5 h-3.5 text-blue-600 rounded border-slate-300"
+                  />
+                  <span className="font-semibold">Product Name</span>
+                </label>
+
+                <label className="flex items-center gap-2 text-slate-700 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={showPrice}
+                    onChange={e => setShowPrice(e.target.checked)}
+                    className="w-3.5 h-3.5 text-blue-600 rounded border-slate-300"
+                  />
+                  <span className="font-semibold">Price & Currency</span>
+                </label>
+
+                <label className="flex items-center gap-2 text-slate-700 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={showSku}
+                    onChange={e => setShowSku(e.target.checked)}
+                    className="w-3.5 h-3.5 text-blue-600 rounded border-slate-300"
+                  />
+                  <span className="font-semibold text-blue-700">Product SKU</span>
+                </label>
+
+                <label className="flex items-center gap-2 text-slate-700 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={showBarcodeText}
+                    onChange={e => setShowBarcodeText(e.target.checked)}
+                    className="w-3.5 h-3.5 text-blue-600 rounded border-slate-300"
+                  />
+                  <span>Barcode Number</span>
+                </label>
+
+                <label className="flex items-center gap-2 text-slate-700 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={showQrCode}
+                    onChange={e => setShowQrCode(e.target.checked)}
+                    className="w-3.5 h-3.5 text-blue-600 rounded border-slate-300"
+                  />
+                  <span className="font-semibold text-blue-700">QR Code Box</span>
+                </label>
+
+                <label className="flex items-center gap-2 text-slate-700 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={showUnit}
+                    onChange={e => setShowUnit(e.target.checked)}
+                    className="w-3.5 h-3.5 text-blue-600 rounded border-slate-300"
+                  />
+                  <span>Unit (/ pc, / kg)</span>
+                </label>
+
                 <label className="flex items-center gap-2 text-slate-700 cursor-pointer select-none">
                   <input
                     type="checkbox"
@@ -543,6 +672,7 @@ export const ProductLabelsPage: React.FC<ProductLabelsPageProps> = ({ onNavigate
                   />
                   <span>Store Name</span>
                 </label>
+
                 <label className="flex items-center gap-2 text-slate-700 cursor-pointer select-none">
                   <input
                     type="checkbox"
@@ -552,33 +682,7 @@ export const ProductLabelsPage: React.FC<ProductLabelsPageProps> = ({ onNavigate
                   />
                   <span>Category / Brand</span>
                 </label>
-                <label className="flex items-center gap-2 text-slate-700 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={showBarcodeText}
-                    onChange={e => setShowBarcodeText(e.target.checked)}
-                    className="w-3.5 h-3.5 text-blue-600 rounded border-slate-300"
-                  />
-                  <span>Barcode / SKU</span>
-                </label>
-                <label className="flex items-center gap-2 text-slate-700 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={showUnit}
-                    onChange={e => setShowUnit(e.target.checked)}
-                    className="w-3.5 h-3.5 text-blue-600 rounded border-slate-300"
-                  />
-                  <span>Unit of Measure</span>
-                </label>
-                <label className="flex items-center gap-2 text-slate-700 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={showCutGuides}
-                    onChange={e => setShowCutGuides(e.target.checked)}
-                    className="w-3.5 h-3.5 text-blue-600 rounded border-slate-300"
-                  />
-                  <span>Cut Guides (Dashed)</span>
-                </label>
+
                 <label className="flex items-center gap-2 text-slate-700 cursor-pointer select-none">
                   <input
                     type="checkbox"
@@ -588,16 +692,57 @@ export const ProductLabelsPage: React.FC<ProductLabelsPageProps> = ({ onNavigate
                   />
                   <span>VAT 16% Note</span>
                 </label>
+
+                <label className="flex items-center gap-2 text-slate-700 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={showCutGuides}
+                    onChange={e => setShowCutGuides(e.target.checked)}
+                    className="w-3.5 h-3.5 text-blue-600 rounded border-slate-300"
+                  />
+                  <span>Dashed Cut Lines</span>
+                </label>
+              </div>
+
+              {/* Custom Promo Text & Shelf Location Inputs */}
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-600 uppercase">Promo Badge</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. SPECIAL OFFER, HOT DEAL"
+                    value={promoText}
+                    onChange={e => setPromoText(e.target.value)}
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-600 uppercase">Shelf Note</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Aisle 3 / Shelf B"
+                    value={customFooter}
+                    onChange={e => setCustomFooter(e.target.value)}
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                  />
+                </div>
               </div>
             </div>
           </div>
+        </div>
+      )}
 
-          {/* Card B: Product Selection & Quantities */}
+      {/* ========================================================================= */}
+      {/* 3. MAIN WORKSPACE: PRODUCT PICKER (LEFT) + LIVE PREVIEW (RIGHT) */}
+      {/* ========================================================================= */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* LEFT COLUMN: Product Selection (5 cols) */}
+        <div className="lg:col-span-5 space-y-5">
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
                 <Tag className="w-3.5 h-3.5 text-blue-600" />
-                <span>2. Select Products to Print</span>
+                <span>Select Products to Label</span>
               </h2>
               <div className="flex items-center gap-1.5">
                 <button
@@ -656,7 +801,7 @@ export const ProductLabelsPage: React.FC<ProductLabelsPageProps> = ({ onNavigate
             </div>
 
             {/* Product List */}
-            <div className="divide-y divide-slate-100 max-h-72 overflow-y-auto pr-1">
+            <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto pr-1">
               {loading ? (
                 <div className="py-8 text-center text-xs text-slate-400">Loading catalog...</div>
               ) : filteredProducts.length === 0 ? (
@@ -689,7 +834,9 @@ export const ProductLabelsPage: React.FC<ProductLabelsPageProps> = ({ onNavigate
                           <p className="text-xs font-bold text-slate-900 truncate">{p.name}</p>
                           <p className="text-[10px] text-slate-500 truncate">
                             {activeBusiness?.currency || 'KES'} {Number(p.selling_price).toLocaleString()}
-                            {p.unit ? ` / ${p.unit}` : ''} · Stock: {p.stock_quantity}
+                            {p.unit ? ` / ${p.unit}` : ''}
+                            {p.sku ? ` · SKU: ${p.sku}` : ''}
+                            {p.barcode ? ` · Barcode: ${p.barcode}` : ''}
                           </p>
                         </div>
                       </div>
@@ -794,16 +941,18 @@ export const ProductLabelsPage: React.FC<ProductLabelsPageProps> = ({ onNavigate
               <div className={getPresetGridClass()}>
                 {flatLabelsToPrint.map((prod, idx) => {
                   const qrVal = getQrValue(prod);
+                  const isSmall = preset === 'barcode_small';
+
                   return (
                     <div
                       key={`label-item-${prod.id}-${idx}`}
-                      className={`bg-white rounded-xl p-3.5 border transition-all relative group flex flex-col justify-between ${
+                      className={`bg-white rounded-xl p-3 border transition-all relative group flex flex-col justify-between ${
                         showCutGuides ? 'border-dashed border-slate-300' : 'border-slate-200 shadow-2xs'
                       }`}
                     >
                       {/* Promo Ribbon */}
                       {promoText.trim() && (
-                        <div className="bg-red-600 text-white text-[9px] font-black uppercase tracking-wider text-center py-0.5 -mt-3.5 -mx-3.5 mb-2 rounded-t-lg">
+                        <div className="bg-red-600 text-white text-[9px] font-black uppercase tracking-wider text-center py-0.5 -mt-3 -mx-3 mb-1.5 rounded-t-lg">
                           {promoText}
                         </div>
                       )}
@@ -817,54 +966,65 @@ export const ProductLabelsPage: React.FC<ProductLabelsPageProps> = ({ onNavigate
                             </span>
                           )}
                           {showCategory && (
-                            <span className="text-slate-400 truncate max-w-[120px]">
+                            <span className="text-slate-400 truncate max-w-[110px]">
                               {[prod.brand_name, prod.category_name].filter(Boolean).join(' · ')}
                             </span>
                           )}
                         </div>
 
                         {/* Product Title */}
-                        <h4 className="text-xs font-bold text-slate-900 leading-tight mb-2 line-clamp-2">
-                          {prod.name}
-                        </h4>
+                        {showName && (
+                          <h4 className="text-xs font-bold text-slate-900 leading-tight mb-1 line-clamp-2">
+                            {prod.name}
+                          </h4>
+                        )}
                       </div>
 
                       {/* Middle: Price & QR Code */}
                       <div className="flex items-center justify-between gap-2 my-1">
                         <div>
-                          <div className="flex items-baseline gap-1">
-                            <span className="text-xs font-bold text-blue-600">
-                              {activeBusiness?.currency || 'KES'}
-                            </span>
-                            <span className="text-xl font-black font-mono tracking-tight text-slate-900">
-                              {Number(prod.selling_price).toLocaleString()}
-                            </span>
-                          </div>
+                          {showPrice && (
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-xs font-bold text-blue-600">
+                                {activeBusiness?.currency || 'KES'}
+                              </span>
+                              <span className={`font-black font-mono tracking-tight text-slate-900 ${isSmall ? 'text-lg' : 'text-xl'}`}>
+                                {Number(prod.selling_price).toLocaleString()}
+                              </span>
+                            </div>
+                          )}
                           {showUnit && prod.unit && (
                             <span className="text-[10px] text-slate-500 font-medium block -mt-0.5">
                               per {prod.unit}
                             </span>
                           )}
                           {showVatNote && (
-                            <span className="text-[8px] text-slate-400 uppercase tracking-wider block mt-1">
+                            <span className="text-[8px] text-slate-400 uppercase tracking-wider block mt-0.5">
                               Tax Inclusive
                             </span>
                           )}
                         </div>
 
-                        <div className="shrink-0 bg-white p-1 rounded-lg border border-slate-100 shadow-2xs text-center">
-                          <QRCodeSVG value={qrVal} size={64} level="M" />
-                          <span className="text-[7px] font-bold text-blue-600 uppercase tracking-tighter block mt-0.5">
-                            {targetMode === 'add_to_cart' ? 'Scan to Cart' : 'Scan Details'}
-                          </span>
-                        </div>
+                        {showQrCode && (
+                          <div className="shrink-0 bg-white p-1 rounded-lg border border-slate-100 shadow-2xs text-center">
+                            <QRCodeSVG value={qrVal} size={isSmall ? 48 : 60} level="M" />
+                            <span className="text-[7px] font-bold text-blue-600 uppercase tracking-tighter block mt-0.5">
+                              {targetMode === 'add_to_cart' ? 'Scan to Cart' : 'Scan Info'}
+                            </span>
+                          </div>
+                        )}
                       </div>
 
-                      {/* Footer: Barcode / SKU / Custom Notes */}
-                      <div className="pt-2 mt-1 border-t border-slate-100 flex items-center justify-between text-[9px] text-slate-400">
-                        {showBarcodeText && (
-                          <span className="font-mono">
-                            {prod.barcode || prod.sku ? `ID: ${prod.barcode || prod.sku}` : ''}
+                      {/* Footer: SKU & Barcode & Custom Notes */}
+                      <div className="pt-1.5 mt-1 border-t border-slate-100 flex flex-wrap items-center justify-between text-[9px] text-slate-500 gap-1">
+                        {showSku && prod.sku && (
+                          <span className="font-mono font-bold text-slate-700">
+                            SKU: {prod.sku}
+                          </span>
+                        )}
+                        {showBarcodeText && prod.barcode && (
+                          <span className="font-mono text-slate-400">
+                            BARCODE: {prod.barcode}
                           </span>
                         )}
                         {customFooter && (
@@ -946,20 +1106,26 @@ export const ProductLabelsPage: React.FC<ProductLabelsPageProps> = ({ onNavigate
                                   {[activeProduct.brand_name, activeProduct.category_name].filter(Boolean).join(' · ')}
                                 </p>
                               )}
-                              <h3 className="text-lg font-black text-slate-900 mt-1">
-                                {activeProduct.name}
-                              </h3>
+                              {showName && (
+                                <h3 className="text-lg font-black text-slate-900 mt-1">
+                                  {activeProduct.name}
+                                </h3>
+                              )}
                             </div>
                           </div>
 
                           <div className="flex items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-200">
                             <div>
-                              <span className="text-xs font-bold text-blue-600 block">
-                                PRICE ({activeBusiness?.currency || 'KES'})
-                              </span>
-                              <span className="text-3xl font-black font-mono text-slate-900">
-                                {Number(activeProduct.selling_price).toLocaleString()}
-                              </span>
+                              {showPrice && (
+                                <>
+                                  <span className="text-xs font-bold text-blue-600 block">
+                                    PRICE ({activeBusiness?.currency || 'KES'})
+                                  </span>
+                                  <span className="text-3xl font-black font-mono text-slate-900">
+                                    {Number(activeProduct.selling_price).toLocaleString()}
+                                  </span>
+                                </>
+                              )}
                               {showUnit && activeProduct.unit && (
                                 <span className="text-xs text-slate-500 font-medium block">
                                   / {activeProduct.unit}
@@ -967,24 +1133,33 @@ export const ProductLabelsPage: React.FC<ProductLabelsPageProps> = ({ onNavigate
                               )}
                             </div>
 
-                            <div className="text-center">
-                              <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-2xs inline-block">
-                                <QRCodeSVG value={qrVal} size={110} level="M" />
+                            {showQrCode && (
+                              <div className="text-center">
+                                <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-2xs inline-block">
+                                  <QRCodeSVG value={qrVal} size={110} level="M" />
+                                </div>
+                                <span className="text-[10px] font-bold text-blue-600 block mt-1">
+                                  {targetMode === 'add_to_cart' ? 'SCAN TO ADD TO CART' : 'SCAN FOR SPECS'}
+                                </span>
                               </div>
-                              <span className="text-[10px] font-bold text-blue-600 block mt-1">
-                                {targetMode === 'add_to_cart' ? 'SCAN TO ADD TO CART' : 'SCAN FOR SPECS'}
-                              </span>
-                            </div>
+                            )}
                           </div>
 
-                          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                            <span className="font-mono">
-                              {activeProduct.barcode ? `BARCODE: ${activeProduct.barcode}` : activeProduct.sku ? `SKU: ${activeProduct.sku}` : ''}
-                            </span>
+                          <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between text-xs text-slate-600 gap-2">
+                            {showSku && activeProduct.sku && (
+                              <span className="font-mono font-bold text-slate-800">
+                                SKU: {activeProduct.sku}
+                              </span>
+                            )}
+                            {showBarcodeText && activeProduct.barcode && (
+                              <span className="font-mono text-slate-500">
+                                BARCODE: {activeProduct.barcode}
+                              </span>
+                            )}
                             {showVatNote && <span>16% VAT Inclusive</span>}
                           </div>
 
-                          {/* Quick test scan button */}
+                          {/* Action Buttons */}
                           <div className="pt-3 flex items-center gap-2">
                             <button
                               type="button"
