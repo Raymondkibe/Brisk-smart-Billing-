@@ -42,8 +42,9 @@ export const RegisterBusinessPage: React.FC<RegisterBusinessPageProps> = ({ onSu
   useEffect(() => {
     if (user) {
       onSuccess();
+      onNavigate('/dashboard');
     }
-  }, [user, onSuccess]);
+  }, [user, onSuccess, onNavigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,7 +79,9 @@ export const RegisterBusinessPage: React.FC<RegisterBusinessPageProps> = ({ onSu
       }
 
       setSuccess(true);
+      // Immediate dual transition so user is never stuck
       onSuccess();
+      onNavigate('/dashboard');
     } catch (err: any) {
       setError(err.message || 'Registration failed');
     } finally {
@@ -273,23 +276,33 @@ export const RegisterBusinessPage: React.FC<RegisterBusinessPageProps> = ({ onSu
             <span className="font-bold">14-Day Free Trial Activated Automatically:</span> You will enjoy unlimited POS transactions, digital receipts, worker management, and M-Pesa integration with zero upfront cost.
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-md shadow-blue-500/20 transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
-          >
-            {loading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Setting Up Your Store...</span>
-              </>
-            ) : (
-              <>
-                <span>Complete Registration & Start Free Trial</span>
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </button>
+          {success ? (
+            <button
+              type="button"
+              onClick={() => onNavigate('/dashboard')}
+              className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md shadow-emerald-500/25 transition-colors flex items-center justify-center gap-2 cursor-pointer animate-pulse"
+            >
+              <span>Registration Complete! Click to Open Dashboard →</span>
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-md shadow-blue-500/20 transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
+            >
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Activating Store & Opening Dashboard...</span>
+                </>
+              ) : (
+                <>
+                  <span>Complete Registration & Start Free Trial</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          )}
 
           {/* Connection to Login Form */}
           <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between text-xs gap-2">

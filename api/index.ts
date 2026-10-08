@@ -17,6 +17,15 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
+// URL path normalizer for Vercel rewrites
+app.use((req: Request, _res: Response, next: NextFunction) => {
+  const matchedPath = (req.headers['x-matched-path'] as string) || (req.headers['x-now-route-matches'] as string);
+  if (matchedPath && req.url.startsWith('/api/index.js')) {
+    req.url = matchedPath;
+  }
+  next();
+});
+
 // Safe body parser that does not hang on Vercel if body was already parsed
 app.use((req: Request, res: Response, next: NextFunction) => {
   if (req.body && typeof req.body === 'object') {
@@ -43,10 +52,16 @@ app.get(['/api', '/'], (_req: Request, res: Response) => {
   });
 });
 
-// Primary Vercel serverless request handler
+// Primary Vercel serverless request handler with Promise resolution
 export default function handler(req: any, res: any) {
-  return app(req, res);
+  return new Promise((resolve) => {
+    res.on('finish', () => resolve(null));
+    res.on('close', () => resolve(null));
+    app(req, res, (err: any) => {
+      if (err && !res.headersSent) {
+        res.status(500).json({ error: err.message || 'Internal Server Error' });
+      }
+      resolve(null);
+    });
+  });
 }
-
-
-

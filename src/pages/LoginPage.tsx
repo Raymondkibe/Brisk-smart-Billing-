@@ -42,9 +42,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onSuccess }) =
       const dest = getDefaultPath();
       if (onSuccess) {
         onSuccess(dest);
-      } else {
-        onNavigate(dest);
       }
+      onNavigate(dest);
     }
   }, [user, getDefaultPath, onSuccess, onNavigate]);
 
@@ -87,9 +86,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onSuccess }) =
       const dest = res.targetPath || res.defaultPath || '/dashboard';
       if (onSuccess) {
         onSuccess(dest);
-      } else {
-        onNavigate(dest);
       }
+      onNavigate(dest);
     } catch (err: any) {
       setError(err.message || 'Login failed. Please try again.');
     } finally {

@@ -5822,6 +5822,13 @@ app.use((req, res, next) => {
   }
   next();
 });
+app.use((req, _res, next) => {
+  const matchedPath = req.headers["x-matched-path"] || req.headers["x-now-route-matches"];
+  if (matchedPath && req.url.startsWith("/api/index.js")) {
+    req.url = matchedPath;
+  }
+  next();
+});
 app.use((req, res, next) => {
   if (req.body && typeof req.body === "object") {
     return next();
@@ -5843,7 +5850,16 @@ app.get(["/api", "/"], (_req, res) => {
   });
 });
 function handler(req, res) {
-  return app(req, res);
+  return new Promise((resolve) => {
+    res.on("finish", () => resolve(null));
+    res.on("close", () => resolve(null));
+    app(req, res, (err) => {
+      if (err && !res.headersSent) {
+        res.status(500).json({ error: err.message || "Internal Server Error" });
+      }
+      resolve(null);
+    });
+  });
 }
 export {
   handler as default

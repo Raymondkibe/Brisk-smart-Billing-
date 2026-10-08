@@ -237,6 +237,18 @@ function getInitialSeedData() {
     created_at: now,
     updated_at: now
   };
+  const techrayAdmin = {
+    id: "user_admin_techray",
+    email: "techray91@gmail.com",
+    phone: "254712345678",
+    full_name: "TechRay Super Admin",
+    password: "Admin123!",
+    password_hash: hashString("Admin123!"),
+    is_super_admin: true,
+    email_verified: true,
+    created_at: now,
+    updated_at: now
+  };
   const bizId = "biz_abc_shop_001";
   const ownerId = "user_owner_001";
   const workerCashierId = "user_worker_001";
@@ -668,7 +680,7 @@ function getInitialSeedData() {
     created_at: now
   };
   return {
-    profiles: [superAdmin, ownerProfile, cashierProfile, managerProfile, salesProfile],
+    profiles: [superAdmin, techrayAdmin, ownerProfile, cashierProfile, managerProfile, salesProfile],
     businesses: [abcShop],
     business_members: members,
     subscription_plans: plans,
@@ -732,9 +744,11 @@ var Database = class {
   }
   ensureAcceptanceTestData() {
     const seed = getInitialSeedData();
-    const adminIdx = this.data.profiles.findIndex((p) => p.is_super_admin || p.id === "user_admin_001");
-    if (adminIdx === -1) {
+    if (!this.data.profiles.some((p) => p.email === "admin@briskbilling.co.ke")) {
       this.data.profiles.unshift(seed.profiles[0]);
+    }
+    if (!this.data.profiles.some((p) => p.email === "techray91@gmail.com")) {
+      this.data.profiles.unshift(seed.profiles[1]);
     }
     const hasAbc = this.data.businesses.some((b) => b.id === "biz_abc_shop_001");
     if (!hasAbc) {
@@ -2423,7 +2437,7 @@ Return a JSON array of objects with the following properties:
 - category: string (e.g. "Milk", "Bread", "Sugar", "Beverages", "Food & Groceries", "General Merchandise")
 - fractional_quantity_allowed: boolean (true if sold by weight like kg/g or volume like L/ml)`;
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.8-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json",
@@ -2486,7 +2500,7 @@ Return a JSON object with:
 - stockAlertMessage: string (direct guidance on what to restock first)
 - profitabilityScore: number (1 to 100)`;
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.8-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json",
@@ -2532,7 +2546,7 @@ async function chatWithAIAssistant(message, businessContext) {
   if (ai) {
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.8-flash",
         contents: message,
         config: {
           systemInstruction: `You are BRISK AI, an expert Kenyan retail assistant for "${businessContext.businessName}".
@@ -2567,7 +2581,7 @@ Notes: ${params.extraNotes || ""}
 
 Return only the plain text message, no quotes, no commentary.`;
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.8-flash",
         contents: prompt
       });
       if (response.text) {
@@ -4588,6 +4602,95 @@ apiRouter.get("/products", (req, res) => {
   }
   return res.json(products);
 });
+apiRouter.get("/public/products/:id", (req, res) => {
+  const targetId = req.params.id;
+  const product = db.getProductById(targetId);
+  if (!product) {
+    return res.status(404).json({ error: "Product not found on shelf catalog" });
+  }
+  const business = db.getBusinessById(product.business_id);
+  return res.json({
+    success: true,
+    product,
+    business: business ? {
+      id: business.id,
+      name: business.name,
+      currency: business.currency,
+      location: business.location,
+      category: business.category
+    } : null
+  });
+});
+apiRouter.post("/public/products/self-checkout", async (req, res) => {
+  try {
+    const { productId, businessId, quantity = 1, phone, customerName = "Customer" } = req.body;
+    if (!productId || !phone) {
+      return res.status(400).json({ error: "Product ID and customer phone number are required" });
+    }
+    const product = db.getProductById(productId, businessId);
+    if (!product) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+    const business = db.getBusinessById(product.business_id);
+    const normalizedPhone = normalizePhoneNumber(phone);
+    const totalAmount = (Number(product.selling_price) || 0) * Number(quantity);
+    const saleId = generateId("sale_self");
+    const saleNumber = `SC-${Date.now().toString().slice(-6)}`;
+    const now = (/* @__PURE__ */ new Date()).toISOString();
+    const sale = {
+      id: saleId,
+      business_id: product.business_id,
+      customer_name: customerName,
+      customer_phone: normalizedPhone,
+      worker_id: "self_checkout",
+      worker_name: "Self-Checkout Scanner",
+      sale_number: saleNumber,
+      subtotal: totalAmount,
+      tax: 0,
+      discount: 0,
+      total: totalAmount,
+      status: "completed",
+      payment_method: "mpesa",
+      payment_status: "PENDING",
+      items: [
+        {
+          id: generateId("sitem"),
+          sale_id: saleId,
+          product_id: product.id,
+          product_name_snapshot: product.name,
+          quantity: Number(quantity),
+          unit_price: product.selling_price,
+          discount: 0,
+          tax: 0,
+          total: totalAmount,
+          created_at: now
+        }
+      ],
+      created_at: now,
+      updated_at: now
+    };
+    db.createSale(sale);
+    const stkResult = await MpesaService.initiateStkPush({
+      businessId: product.business_id,
+      phone: normalizedPhone,
+      amount: totalAmount,
+      saleId,
+      accountReference: saleNumber,
+      transactionDesc: `Payment for ${product.name.slice(0, 15)}`
+    });
+    return res.json({
+      success: true,
+      saleId,
+      saleNumber,
+      amount: totalAmount,
+      currency: business?.currency || "KES",
+      message: `M-Pesa STK push sent to ${maskPhoneNumber(normalizedPhone)} for KES ${totalAmount.toLocaleString()}. Please enter your PIN.`,
+      stkResult
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message || "Failed to initiate self-checkout" });
+  }
+});
 apiRouter.post("/products", (req, res) => {
   const businessId = req.businessId;
   const userId = req.userId;
@@ -5719,14 +5822,21 @@ app.use((req, res, next) => {
   }
   next();
 });
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 app.use((req, _res, next) => {
-  const matchedPath = req.headers["x-matched-path"] || req.headers["x-invoke-path"];
-  if (matchedPath && !matchedPath.endsWith("index.js") && !matchedPath.endsWith("index") && !matchedPath.endsWith("all.js")) {
+  const matchedPath = req.headers["x-matched-path"] || req.headers["x-now-route-matches"];
+  if (matchedPath && req.url.startsWith("/api/index.js")) {
     req.url = matchedPath;
   }
   next();
+});
+app.use((req, res, next) => {
+  if (req.body && typeof req.body === "object") {
+    return next();
+  }
+  express.json()(req, res, (err) => {
+    if (err) return next(err);
+    express.urlencoded({ extended: true })(req, res, next);
+  });
 });
 app.use("/api", apiRouter);
 app.use(apiRouter);
@@ -5739,7 +5849,18 @@ app.get(["/api", "/"], (_req, res) => {
     timestamp: (/* @__PURE__ */ new Date()).toISOString()
   });
 });
-var index_default = app;
+function handler(req, res) {
+  return new Promise((resolve) => {
+    res.on("finish", () => resolve(null));
+    res.on("close", () => resolve(null));
+    app(req, res, (err) => {
+      if (err && !res.headersSent) {
+        res.status(500).json({ error: err.message || "Internal Server Error" });
+      }
+      resolve(null);
+    });
+  });
+}
 export {
-  index_default as default
+  handler as default
 };
