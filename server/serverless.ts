@@ -1,5 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { apiRouter } from '../server/api';
+import { apiRouter } from './api';
 
 const app = express();
 
@@ -17,11 +17,15 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// URL path normalizer for Vercel rewrites
+// URL path normalizer for Vercel rewrites & serverless invocations
 app.use((req: Request, _res: Response, next: NextFunction) => {
   const matchedPath = (req.headers['x-matched-path'] as string) || (req.headers['x-now-route-matches'] as string);
-  if (matchedPath && req.url.startsWith('/api/index.js')) {
+  if (matchedPath) {
     req.url = matchedPath;
+  } else if (req.url.startsWith('/api/index.js')) {
+    req.url = req.url.replace('/api/index.js', '') || '/';
+  } else if (req.url.startsWith('/api/index')) {
+    req.url = req.url.replace('/api/index', '') || '/';
   }
   next();
 });

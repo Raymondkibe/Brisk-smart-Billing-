@@ -15,6 +15,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { AuthDiagnosticPanel } from '../components/AuthDiagnosticPanel';
 
 interface RegisterBusinessPageProps {
   onSuccess: () => void;
@@ -90,7 +91,7 @@ export const RegisterBusinessPage: React.FC<RegisterBusinessPageProps> = ({ onSu
   };
 
   return (
-    <div className="flex-1 bg-slate-100 py-8 sm:py-12 px-4 flex items-center justify-center font-sans selection:bg-blue-600 selection:text-white">
+    <div className="flex-1 bg-slate-100 py-8 sm:py-12 px-4 flex flex-col items-center justify-center font-sans selection:bg-blue-600 selection:text-white">
       <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
         
         {/* Header */}
@@ -327,6 +328,11 @@ export const RegisterBusinessPage: React.FC<RegisterBusinessPageProps> = ({ onSu
           </div>
         </form>
 
+      </div>
+
+      {/* Diagnostics telemetry & status panel */}
+      <div className="w-full max-w-lg mt-3">
+        <AuthDiagnosticPanel onNavigate={onNavigate} />
       </div>
     </div>
   );

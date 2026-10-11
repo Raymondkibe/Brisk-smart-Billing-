@@ -1,4 +1,4 @@
-// api/index.ts
+// server/serverless.ts
 import express from "express";
 
 // server/api.ts
@@ -5809,7 +5809,7 @@ apiRouter.post("/test/run-acceptance-simulation", async (req, res) => {
   }
 });
 
-// api/index.ts
+// server/serverless.ts
 var app = express();
 app.use((req, res, next) => {
   const origin = req.headers.origin || "*";
@@ -5824,8 +5824,12 @@ app.use((req, res, next) => {
 });
 app.use((req, _res, next) => {
   const matchedPath = req.headers["x-matched-path"] || req.headers["x-now-route-matches"];
-  if (matchedPath && req.url.startsWith("/api/index.js")) {
+  if (matchedPath) {
     req.url = matchedPath;
+  } else if (req.url.startsWith("/api/index.js")) {
+    req.url = req.url.replace("/api/index.js", "") || "/";
+  } else if (req.url.startsWith("/api/index")) {
+    req.url = req.url.replace("/api/index", "") || "/";
   }
   next();
 });

@@ -39,7 +39,7 @@
       "id": "user_worker_001",
       "email": "john.kamau@abcshop.co.ke",
       "phone": "0712345678",
-      "full_name": "Ken Okoth",
+      "full_name": "John",
       "password": "password123",
       "password_hash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
       "email_verified": true,
@@ -85,14 +85,26 @@
       "id": "user_ab3ae5a894f8",
       "email": "owner@apexminimarket.co.ke",
       "phone": "0711223344",
-      "full_name": "Apex Owner",
-      "password": "password123",
-      "password_hash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
+      "full_name": "Alice",
+      "password": "Password123!",
+      "password_hash": "a109e36947ad56de1dca1cc49f0ef8ac9ad9a7b1aa0df41fb3c4cb73c1ff01ea",
       "is_super_admin": false,
       "email_verified": true,
       "created_at": "2026-10-06T14:57:00.824Z",
       "updated_at": "2026-10-06T14:57:00.852Z",
       "last_login_at": "2026-10-06T14:57:00.852Z"
+    },
+    {
+      "id": "d37bc02a-e714-41b3-b248-a4e899c77a7b",
+      "email": "test@example.com",
+      "phone": "0712345678",
+      "full_name": "John",
+      "password": "password123",
+      "password_hash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
+      "email_verified": true,
+      "created_at": "2026-10-10T13:54:05.887469Z",
+      "updated_at": "2026-10-11T08:22:09.017Z",
+      "last_login_at": "2026-10-11T08:22:09.017Z"
     }
   ],
   "businesses": [
@@ -162,6 +174,38 @@
       "tax_percentage": 0,
       "created_at": "2026-10-06T14:57:00.824Z",
       "updated_at": "2026-10-06T14:57:00.824Z"
+    },
+    {
+      "id": "biz_a763ffc2b40d",
+      "owner_id": "user_worker_001",
+      "name": "Test Biz",
+      "slug": "test-biz-669",
+      "category": "Retail & Supermarket",
+      "phone": "0712345678",
+      "email": "test@example.com",
+      "location": "Nairobi, Kenya",
+      "currency": "KES",
+      "status": "active",
+      "receipt_footer": "Thank you for shopping with Test Biz! Powered by BRISK SMART BILLING.",
+      "tax_percentage": 0,
+      "created_at": "2026-10-10T13:54:05.311Z",
+      "updated_at": "2026-10-10T13:54:05.311Z"
+    },
+    {
+      "id": "biz_2f38e64d59a5",
+      "owner_id": "user_ab3ae5a894f8",
+      "name": "My Quick Shop",
+      "slug": "my-quick-shop-222",
+      "category": "Retail & Supermarket",
+      "phone": "0711223344",
+      "email": "alice1791706933107@gmail.com",
+      "location": "Nairobi, Kenya",
+      "currency": "KES",
+      "status": "active",
+      "receipt_footer": "Thank you for shopping with My Quick Shop! Powered by BRISK SMART BILLING.",
+      "tax_percentage": 0,
+      "created_at": "2026-10-11T08:22:13.165Z",
+      "updated_at": "2026-10-11T08:22:13.165Z"
     }
   ],
   "business_members": [
@@ -318,6 +362,48 @@
       },
       "created_at": "2026-10-06T14:57:00.824Z",
       "updated_at": "2026-10-06T14:57:00.824Z"
+    },
+    {
+      "id": "mem_bcc0f57c3e4d",
+      "business_id": "biz_a763ffc2b40d",
+      "user_id": "user_worker_001",
+      "role": "owner",
+      "status": "active",
+      "permissions": {
+        "can_create_sales": true,
+        "can_apply_discount": true,
+        "max_discount_percent": 100,
+        "can_manage_products": true,
+        "can_manage_inventory": true,
+        "can_manage_workers": true,
+        "can_view_reports": true,
+        "can_configure_mpesa": true,
+        "can_manage_subscription": true,
+        "can_issue_refunds": true
+      },
+      "created_at": "2026-10-10T13:54:05.311Z",
+      "updated_at": "2026-10-10T13:54:05.311Z"
+    },
+    {
+      "id": "mem_3e7a2c5047eb",
+      "business_id": "biz_2f38e64d59a5",
+      "user_id": "user_ab3ae5a894f8",
+      "role": "owner",
+      "status": "active",
+      "permissions": {
+        "can_create_sales": true,
+        "can_apply_discount": true,
+        "max_discount_percent": 100,
+        "can_manage_products": true,
+        "can_manage_inventory": true,
+        "can_manage_workers": true,
+        "can_view_reports": true,
+        "can_configure_mpesa": true,
+        "can_manage_subscription": true,
+        "can_issue_refunds": true
+      },
+      "created_at": "2026-10-11T08:22:13.165Z",
+      "updated_at": "2026-10-11T08:22:13.165Z"
     }
   ],
   "subscription_plans": [
@@ -464,6 +550,32 @@
       "days_remaining": 14,
       "created_at": "2026-10-06T14:57:00.824Z",
       "updated_at": "2026-10-06T14:57:00.824Z"
+    },
+    {
+      "id": "sub_a0c3c585f5fa",
+      "business_id": "biz_a763ffc2b40d",
+      "plan_id": "plan_standard",
+      "plan_name": "Standard (14-Day Free Trial)",
+      "status": "trial",
+      "trial_started_at": "2026-10-10T13:54:05.311Z",
+      "trial_ends_at": "2026-10-24T13:54:05.311Z",
+      "ends_at": "2026-10-24T13:54:05.311Z",
+      "days_remaining": 14,
+      "created_at": "2026-10-10T13:54:05.311Z",
+      "updated_at": "2026-10-10T13:54:05.311Z"
+    },
+    {
+      "id": "sub_f0faef5e3adc",
+      "business_id": "biz_2f38e64d59a5",
+      "plan_id": "plan_standard",
+      "plan_name": "Standard (14-Day Free Trial)",
+      "status": "trial",
+      "trial_started_at": "2026-10-11T08:22:13.165Z",
+      "trial_ends_at": "2026-10-25T08:22:13.165Z",
+      "ends_at": "2026-10-25T08:22:13.165Z",
+      "days_remaining": 14,
+      "created_at": "2026-10-11T08:22:13.165Z",
+      "updated_at": "2026-10-11T08:22:13.165Z"
     }
   ],
   "categories": [
@@ -496,6 +608,18 @@
       "business_id": "biz_e554f93b23e2",
       "name": "General Merchandise",
       "created_at": "2026-10-06T14:57:00.828Z"
+    },
+    {
+      "id": "cat_c1ec612681ca",
+      "business_id": "biz_a763ffc2b40d",
+      "name": "General Merchandise",
+      "created_at": "2026-10-10T13:54:05.315Z"
+    },
+    {
+      "id": "cat_8305d3017e29",
+      "business_id": "biz_2f38e64d59a5",
+      "name": "General Merchandise",
+      "created_at": "2026-10-11T08:22:13.169Z"
     }
   ],
   "products": [
@@ -882,6 +1006,28 @@
       "active": true,
       "has_credentials": true,
       "updated_at": "2026-10-06T14:57:00.828Z"
+    },
+    {
+      "id": "mpesa_cfg_61a5a1154271",
+      "business_id": "biz_a763ffc2b40d",
+      "environment": "test",
+      "consumer_key_masked": "••••••••••••4379",
+      "shortcode": "174379",
+      "passkey_masked": "••••••••••••bfb2",
+      "active": true,
+      "has_credentials": true,
+      "updated_at": "2026-10-10T13:54:05.316Z"
+    },
+    {
+      "id": "mpesa_cfg_7ad1d23b6603",
+      "business_id": "biz_2f38e64d59a5",
+      "environment": "test",
+      "consumer_key_masked": "••••••••••••4379",
+      "shortcode": "174379",
+      "passkey_masked": "••••••••••••bfb2",
+      "active": true,
+      "has_credentials": true,
+      "updated_at": "2026-10-11T08:22:13.170Z"
     }
   ],
   "mpesa_callbacks": [],
@@ -1014,7 +1160,9 @@
     "biz_abc_shop_001": 125,
     "biz_5251fd48fce2": 0,
     "biz_f604eb9ab64c": 0,
-    "biz_e554f93b23e2": 0
+    "biz_e554f93b23e2": 0,
+    "biz_a763ffc2b40d": 0,
+    "biz_2f38e64d59a5": 0
   },
   "brands": [
     {
@@ -1099,11 +1247,37 @@
       "created_at": "2026-10-06T14:57:00.826Z",
       "expires_at": "2026-10-07T14:57:00.826Z",
       "last_sent_at": "2026-10-06T14:57:00.826Z"
+    },
+    {
+      "id": "evt_b34376c27e5d",
+      "email": "test@example.com",
+      "token": "dd4d6922d017c540213c98dd9bf7b10199890bd1da1c84b5",
+      "verified": false,
+      "created_at": "2026-10-10T13:54:05.312Z",
+      "expires_at": "2026-10-11T13:54:05.312Z",
+      "last_sent_at": "2026-10-10T13:54:05.312Z"
+    },
+    {
+      "id": "evt_516fb6c71d36",
+      "email": "alice1791706933107@gmail.com",
+      "token": "608e2e6933c91b5210c277e79442c25e72dcb378958a98c9",
+      "verified": false,
+      "created_at": "2026-10-11T08:22:13.166Z",
+      "expires_at": "2026-10-12T08:22:13.166Z",
+      "last_sent_at": "2026-10-11T08:22:13.166Z"
     }
   ],
   "password_resets": [],
   "worker_invitations": [],
   "login_activities": [
+    {
+      "id": "lac_ab2935c6495e",
+      "user_id": "d37bc02a-e714-41b3-b248-a4e899c77a7b",
+      "email": "test@example.com",
+      "status": "success",
+      "role": "owner",
+      "timestamp": "2026-10-11T08:22:09.018Z"
+    },
     {
       "id": "lac_43d68e32d43c",
       "user_id": "user_admin_001",

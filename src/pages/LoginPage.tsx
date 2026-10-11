@@ -12,6 +12,7 @@ import {
   X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { AuthDiagnosticPanel } from '../components/AuthDiagnosticPanel';
 
 interface LoginPageProps {
   onNavigate: (path: string) => void;
@@ -266,7 +267,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onSuccess }) =
             No credit card required · Instant POS register and M-Pesa setup
           </p>
         </div>
+      </div>
 
+      {/* Diagnostics telemetry & status panel */}
+      <div className="w-full max-w-md">
+        <AuthDiagnosticPanel onNavigate={onNavigate} />
       </div>
 
       {/* Forgot Password Modal */}
