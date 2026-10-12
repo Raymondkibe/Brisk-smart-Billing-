@@ -106,6 +106,7 @@ function useRouter() {
 function AppContent() {
   const {
     user,
+    activeBusiness,
     loading,
     isOwner,
     isCashier,
@@ -327,11 +328,28 @@ function AppContent() {
   };
 
   // 4. Authenticated Layout with Responsive Navigation
+  const isDeactivated = activeBusiness?.status === 'deactivated' || activeBusiness?.status === 'suspended';
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-between pb-16 md:pb-0 selection:bg-blue-600 selection:text-white font-sans">
       <Navigation currentPath={cleanPath} onNavigate={navigate} />
 
       <div className="flex-1 md:pl-60 flex flex-col justify-between min-h-[calc(100vh-4rem)]">
+        {isDeactivated && (
+          <div className="bg-red-600 text-white px-4 py-2.5 text-xs font-semibold flex items-center justify-between shadow-xs">
+            <div className="flex items-center gap-2">
+              <span className="font-bold">⚠️ Store Account Deactivated by Platform Admin:</span>
+              <span>This store has been temporarily deactivated. Back-office access is in read-only mode and checkout counters are paused.</span>
+            </div>
+            <button
+              onClick={() => navigate('/support')}
+              className="px-2.5 py-1 bg-white text-red-700 rounded font-bold hover:bg-red-50 text-[11px] cursor-pointer shrink-0"
+            >
+              Contact Support
+            </button>
+          </div>
+        )}
+
         <main className="pt-4 flex-1">
           {renderAuthenticatedPage()}
         </main>

@@ -9,10 +9,11 @@ import {
   AlertCircle,
   Smartphone,
   KeyRound,
-  X
+  X,
+  Terminal
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { AuthDiagnosticPanel } from '../components/AuthDiagnosticPanel';
+import { AuthDiagnosticsModal } from '../components/AuthDiagnosticsModal';
 
 interface LoginPageProps {
   onNavigate: (path: string) => void;
@@ -26,6 +27,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onSuccess }) =
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,6 +86,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onSuccess }) =
       }
 
       setSuccessMessage(`Welcome back, ${res.user?.full_name || 'User'}! Redirecting...`);
+      setLoading(false);
       const dest = res.targetPath || res.defaultPath || '/dashboard';
       if (onSuccess) {
         onSuccess(dest);
@@ -267,11 +270,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onSuccess }) =
             No credit card required · Instant POS register and M-Pesa setup
           </p>
         </div>
-      </div>
 
-      {/* Diagnostics telemetry & status panel */}
-      <div className="w-full max-w-md">
-        <AuthDiagnosticPanel onNavigate={onNavigate} />
       </div>
 
       {/* Forgot Password Modal */}

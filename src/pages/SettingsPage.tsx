@@ -325,7 +325,7 @@ export const SettingsPage: React.FC = () => {
             }`}
           >
             <Database className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Supabase Database &amp; SQL</span>
+            <span>Cloud Database &amp; SQL</span>
           </button>
 
           <a
@@ -922,10 +922,10 @@ export const SettingsPage: React.FC = () => {
             <div>
               <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
                 <Database className="w-5 h-5 text-emerald-600" />
-                <span>Supabase PostgreSQL Production Schema &amp; SQL</span>
+                <span>Production PostgreSQL Schema &amp; SQL</span>
               </h2>
               <p className="text-xs text-slate-500 mt-1">
-                Run this SQL script in your <strong>Supabase SQL Editor</strong> to create all tables, indexes, RLS policies, and admin accounts.
+                Run this SQL script in your <strong>Database SQL Editor</strong> to create all tables, indexes, and initial admin accounts.
               </p>
             </div>
 
@@ -933,7 +933,7 @@ export const SettingsPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => {
-                  fetch('/supabase_schema.sql')
+                  fetch('/schema.sql')
                     .then(r => r.text())
                     .then(sql => {
                       navigator.clipboard.writeText(sql);
@@ -952,8 +952,8 @@ export const SettingsPage: React.FC = () => {
               </button>
 
               <a
-                href="/supabase_schema.sql"
-                download="supabase_schema.sql"
+                href="/schema.sql"
+                download="schema.sql"
                 className="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 <Download className="w-4 h-4 text-emerald-600" />
@@ -964,23 +964,23 @@ export const SettingsPage: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
             <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Step 1: Open Supabase</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Step 1: Open Cloud Database</span>
               <p className="text-slate-700 font-medium leading-relaxed">
-                Log in to your dashboard at <strong>https://supabase.com</strong> and select your project.
+                Log in to your cloud database dashboard and select your active project.
               </p>
             </div>
 
             <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Step 2: SQL Editor</span>
               <p className="text-slate-700 font-medium leading-relaxed">
-                Click on <strong>SQL Editor</strong> on the left sidebar &amp; click <strong>New Query</strong>.
+                Click on <strong>SQL Editor</strong> on the navigation menu &amp; click <strong>New Query</strong>.
               </p>
             </div>
 
             <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Step 3: Paste &amp; Run</span>
               <p className="text-slate-700 font-medium leading-relaxed">
-                Paste the SQL from below or the file, and click the green <strong>Run</strong> button.
+                Paste the SQL script from below and click the green <strong>Run</strong> button.
               </p>
             </div>
           </div>
@@ -990,15 +990,15 @@ export const SettingsPage: React.FC = () => {
             <div className="flex items-center justify-between text-xs text-slate-500">
               <span className="font-semibold flex items-center gap-1">
                 <Code className="w-3.5 h-3.5 text-blue-600" />
-                <span>SQL Schema Script Preview (supabase_schema.sql)</span>
+                <span>SQL Schema Script Preview (schema.sql)</span>
               </span>
               <span className="font-mono text-[11px] text-slate-400">PostgreSQL 15+ Compatible</span>
             </div>
 
             <pre className="p-4 bg-slate-950 text-slate-200 font-mono text-xs rounded-xl overflow-x-auto max-h-96 border border-slate-800 leading-relaxed scrollbar-thin">
 {`-- ============================================================================
--- BRISK SMART BILLING & POS - SUPABASE POSTGRESQL PRODUCTION SCHEMA
--- Run this in Supabase SQL Editor: https://uztxsjbmugfbhgedpmpe.supabase.co
+-- BRISK SMART BILLING & POS - POSTGRESQL PRODUCTION SCHEMA
+-- Database Target: PostgreSQL (Auto-Migrating & Production Storage)
 -- ============================================================================
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -1095,7 +1095,7 @@ CREATE TABLE IF NOT EXISTS public.payments (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- (Full schema script with all 20+ tables is in /supabase_schema.sql)`}
+-- (Full schema script with all 20+ tables is in /schema.sql)`}
             </pre>
           </div>
         </div>

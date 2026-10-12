@@ -12,10 +12,11 @@ import {
   AlertCircle,
   ArrowRight,
   LogIn,
-  Sparkles
+  Sparkles,
+  Terminal
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { AuthDiagnosticPanel } from '../components/AuthDiagnosticPanel';
+import { AuthDiagnosticsModal } from '../components/AuthDiagnosticsModal';
 
 interface RegisterBusinessPageProps {
   onSuccess: () => void;
@@ -39,6 +40,7 @@ export const RegisterBusinessPage: React.FC<RegisterBusinessPageProps> = ({ onSu
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -80,9 +82,10 @@ export const RegisterBusinessPage: React.FC<RegisterBusinessPageProps> = ({ onSu
       }
 
       setSuccess(true);
-      // Immediate dual transition so user is never stuck
+      setLoading(false);
+      const targetDest = result.targetPath || '/dashboard';
       onSuccess();
-      onNavigate('/dashboard');
+      onNavigate(targetDest);
     } catch (err: any) {
       setError(err.message || 'Registration failed');
     } finally {
@@ -91,7 +94,7 @@ export const RegisterBusinessPage: React.FC<RegisterBusinessPageProps> = ({ onSu
   };
 
   return (
-    <div className="flex-1 bg-slate-100 py-8 sm:py-12 px-4 flex flex-col items-center justify-center font-sans selection:bg-blue-600 selection:text-white">
+    <div className="flex-1 bg-slate-100 py-8 sm:py-12 px-4 flex items-center justify-center font-sans selection:bg-blue-600 selection:text-white">
       <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
         
         {/* Header */}
@@ -328,11 +331,6 @@ export const RegisterBusinessPage: React.FC<RegisterBusinessPageProps> = ({ onSu
           </div>
         </form>
 
-      </div>
-
-      {/* Diagnostics telemetry & status panel */}
-      <div className="w-full max-w-lg mt-3">
-        <AuthDiagnosticPanel onNavigate={onNavigate} />
       </div>
     </div>
   );
